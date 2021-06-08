@@ -93,4 +93,10 @@ class Controller extends GetxController {
   getModified() {
     return isModified.value;
   }
+
+  //ORDER PAGE SECTION
+  var hasOrderedSomething = false.obs;
+
+  getHasOrderedSomething() => hasOrderedSomething.value;
+  setHasOrderedSomething(value) => hasOrderedSomething(value);
 }

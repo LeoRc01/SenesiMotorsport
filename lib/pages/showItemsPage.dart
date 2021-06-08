@@ -17,7 +17,12 @@ import 'package:http/http.dart' as http;
 class ShowItemsPage extends StatefulWidget {
   final bagID;
 
-  const ShowItemsPage({Key key, this.bagID}) : super(key: key);
+  bool comingFromPage = false;
+
+  ShowItemsPage.comingFromPage(this.comingFromPage, {this.bagID = null});
+
+  ShowItemsPage({Key key, this.bagID, this.comingFromPage = false})
+      : super(key: key);
   @override
   _ShowItemsPageState createState() => _ShowItemsPageState();
 }
@@ -35,6 +40,12 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
     showItemsPagecontroller = new Controller();
 
     getAllItems();
+  }
+
+  @override
+  void dispose() {
+    showItemsPagecontroller.dispose();
+    super.dispose();
   }
 
   //DONE: Implement delete item
@@ -70,6 +81,7 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
           quantity: int.parse(item['quantity']),
           image: image,
           itemID: item['itemId'],
+          state: widget.comingFromPage,
         );
         itemList.add(temp);
       }
@@ -82,6 +94,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
   }
 
   addItems() async {
+    Get.back();
+    showItemsPagecontroller.setIsLoading();
     var str;
     for (var item in selectedItems) {
       print("ITEMID: " + item.itemID);
@@ -102,7 +116,7 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
     }
     selectedItems.removeRange(0, selectedItems.length);
     showItemsPagecontroller.setQuantityToZero();
-    Get.back();
+    showItemsPagecontroller.setNotLoadingLoading();
     Get.back();
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => MainPage()));
@@ -129,123 +143,163 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            //APPBAR
-            Container(
-              //padding: EdgeInsets.symmetric(horizontal: 10),
-              margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: FaIcon(FontAwesomeIcons.chevronLeft),
-                    onPressed: () {
-                      Get.back();
-                    },
-                  ),
-                  Obx(
-                    () => GestureDetector(
-                      onTap: () {
-                        if (showItemsPagecontroller.getQuantity() > 0) {
-                          Get.defaultDialog(
-                              title: "Add these items?",
-                              titleStyle:
-                                  GoogleFonts.montserrat(color: Colors.white),
-                              backgroundColor: AppColors.darkColor,
-                              content: Container(),
-                              actions: [
-                                GestureDetector(
-                                  onTap: () => Get.back(),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 10),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.red),
-                                    child: Text(
-                                      "No",
-                                      style: GoogleFonts.montserrat(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    //DONE: Add items to bag
-                                    addItems();
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 10),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: AppColors.mainColor),
-                                    child: Text(
-                                      "Yes",
-                                      style: GoogleFonts.montserrat(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ),
-                              ]);
-                        }
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(right: 20, top: 5),
-                        child: Badge(
-                          shape: BadgeShape.circle,
-                          toAnimate: true,
-                          badgeColor: AppColors.darkColor,
-                          position: BadgePosition.topStart(),
-                          badgeContent: Text(
-                            showItemsPagecontroller.quantity.toString(),
-                            style: GoogleFonts.montserrat(color: Colors.white),
+        child: Obx(
+          () => showItemsPagecontroller.getLoading()
+              ? Center(
+                  child: CircularProgressIndicator(),
+                )
+              : Column(
+                  children: [
+                    //APPBAR
+                    Container(
+                      //padding: EdgeInsets.symmetric(horizontal: 10),
+                      margin: EdgeInsets.only(
+                          top: MediaQuery.of(context).padding.top),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: FaIcon(FontAwesomeIcons.chevronLeft),
+                                onPressed: () {
+                                  Get.back();
+                                },
+                              ),
+                              Text(
+                                "Your Items",
+                                style: GoogleFonts.montserrat(
+                                    color: AppColors.darkColor,
+                                    fontSize: Get.width * 0.07,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
-                          child: Icon(Icons.shopping_bag_outlined),
-                        ),
+                          !widget.comingFromPage
+                              ? Obx(
+                                  () => GestureDetector(
+                                    onTap: () {
+                                      if (showItemsPagecontroller
+                                              .getQuantity() >
+                                          0) {
+                                        Get.defaultDialog(
+                                            title: "Add these items?",
+                                            titleStyle: GoogleFonts.montserrat(
+                                                color: Colors.white),
+                                            backgroundColor:
+                                                AppColors.darkColor,
+                                            content: Container(),
+                                            actions: [
+                                              GestureDetector(
+                                                onTap: () => Get.back(),
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 10),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      color: Colors.red),
+                                                  child: Text(
+                                                    "No",
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
+                                                  ),
+                                                ),
+                                              ),
+                                              GestureDetector(
+                                                onTap: () async {
+                                                  //DONE: Add items to bag
+                                                  addItems();
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 10),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      color:
+                                                          AppColors.mainColor),
+                                                  child: Text(
+                                                    "Yes",
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
+                                                  ),
+                                                ),
+                                              ),
+                                            ]);
+                                      }
+                                    },
+                                    child: Container(
+                                      margin:
+                                          EdgeInsets.only(right: 20, top: 5),
+                                      child: Badge(
+                                        shape: BadgeShape.circle,
+                                        toAnimate: true,
+                                        badgeColor: AppColors.darkColor,
+                                        position: BadgePosition.topStart(),
+                                        badgeContent: Text(
+                                          showItemsPagecontroller.quantity
+                                              .toString(),
+                                          style: GoogleFonts.montserrat(
+                                              color: Colors.white),
+                                        ),
+                                        child:
+                                            Icon(Icons.shopping_bag_outlined),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container()
+                        ],
                       ),
                     ),
-                  )
-                ],
-              ),
-            ),
 
-            //BODY PAGE
-            RefreshIndicator(
-              onRefresh: () {
-                return getAllItems();
-              },
-              child: Obx(
-                () => showItemsPagecontroller.getLoading()
-                    ? Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : itemList.length != 0
-                        ? Container(
-                            height: Get.height -
-                                MediaQuery.of(context).padding.top * 3,
-                            child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: itemList.length,
-                                itemBuilder: (context, index) {
-                                  return itemList[index];
-                                }),
-                          )
-                        : Expanded(
-                            child: Center(
-                              child: Text(
-                                "You have no items available.",
-                                style:
-                                    GoogleFonts.montserrat(color: Colors.white),
-                              ),
-                            ),
-                          ),
-              ),
-            ),
-          ],
+                    //BODY PAGE
+                    RefreshIndicator(
+                      onRefresh: () {
+                        return getAllItems();
+                      },
+                      child: Obx(
+                        () => showItemsPagecontroller.getLoading()
+                            ? Center(
+                                child: CircularProgressIndicator(),
+                              )
+                            : itemList.length != 0
+                                ? Container(
+                                    height: Get.height -
+                                        MediaQuery.of(context).padding.top * 3,
+                                    child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: itemList.length,
+                                        itemBuilder: (context, index) {
+                                          return itemList[index];
+                                        }),
+                                  )
+                                : Expanded(
+                                    child: Center(
+                                      child: Text(
+                                        "You have no items available.",
+                                        style: GoogleFonts.montserrat(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -257,8 +311,10 @@ class Item extends StatefulWidget {
   final text;
   int quantity;
   final itemID;
+  bool state;
 
-  Item({Key key, this.image, this.text, this.quantity, this.itemID});
+  Item(
+      {Key key, this.image, this.text, this.quantity, this.itemID, this.state});
 
   @override
   _ItemState createState() => _ItemState();
@@ -310,7 +366,7 @@ class _ItemState extends State<Item> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          if (!click) {
+          if (!widget.state) if (!click) {
             if (widget.quantity != 0) {
               selectedColor = Colors.green;
               click = !click;
@@ -361,6 +417,7 @@ class _ItemState extends State<Item> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
                           icon: FaIcon(
@@ -404,6 +461,7 @@ class _ItemState extends State<Item> {
                             updateItem();
                           },
                           child: Container(
+                            width: Get.width * 0.2,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(40),

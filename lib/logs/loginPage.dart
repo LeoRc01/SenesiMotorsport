@@ -172,7 +172,8 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.black, fontWeight: FontWeight.bold),
               ),
               messageText: Text(
-                "Something went wrong. Try login again with the correct data.",
+                //onError.toString(),
+                "Something went wrong. Try login again with the correct data or check your internet connection.",
                 style: GoogleFonts.montserrat(),
               ),
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),

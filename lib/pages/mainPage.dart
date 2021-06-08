@@ -1,5 +1,6 @@
 import 'dart:convert';
-
+import 'package:SenesiMotorsport/pages/yourorders.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
@@ -56,23 +57,6 @@ class _MainPageState extends State<MainPage> {
           .then((value) {
         print(value);
       });*/
-
-      woocommerce.getOrders().then((value) {
-        bool found = false;
-        for (var item in value) {
-          Map<String, dynamic> order = item.toJson();
-          Map<String, dynamic> billing = order["billing"];
-          if (billing["email"] == "agama1257@gmail.com") {
-            found = true;
-            for (var product in item.lineItems) {
-              print(product.name);
-            }
-          }
-        }
-        if (!found) {
-          print("User has not made any orders yet.");
-        }
-      });
     });
 
     //woocommerce.getOrders();
@@ -304,15 +288,36 @@ class _MainPageState extends State<MainPage> {
                                   }),
                             ),
                             Container(
-                              child: IconButton(
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.stickyNote,
-                                    color: AppColors.darkColor,
-                                  ),
-                                  onPressed: () {
-                                    Get.to(() => NoteAndFolders(
-                                        "mainpage", "Your folders"));
-                                  }),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.listAlt,
+                                        color: AppColors.darkColor,
+                                      ),
+                                      onPressed: () {
+                                        Get.to(() =>
+                                            ShowItemsPage.comingFromPage(true));
+                                      }),
+                                  IconButton(
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.user,
+                                        color: AppColors.darkColor,
+                                      ),
+                                      onPressed: () {
+                                        Get.to(() => YourOrders());
+                                      }),
+                                  IconButton(
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.stickyNote,
+                                        color: AppColors.darkColor,
+                                      ),
+                                      onPressed: () {
+                                        Get.to(() => NoteAndFolders(
+                                            "mainpage", "Your folders"));
+                                      }),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -573,15 +578,11 @@ class Item extends StatelessWidget {
     controller.initializeQuantity(quantity);
     return GestureDetector(
       onLongPress: () async {
-        //TODO: Redirect to website if category
-        if (category == "Oils") {
-          const _url =
-              'https://senesimotorsport.com/product-category/oli-al-silicone/';
+        const _url = 'https://senesimotorsport.com/';
 
-          await canLaunch(_url)
-              ? await launch(_url)
-              : throw 'Could not launch $_url';
-        }
+        await canLaunch(_url)
+            ? await launch(_url)
+            : throw 'Could not launch $_url';
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -614,7 +615,7 @@ class Item extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
                           icon: FaIcon(
@@ -625,14 +626,13 @@ class Item extends StatelessWidget {
                           onPressed: () {
                             controller.decrementQuantity();
                             if (quantity > 0) quantity--;
-                            //TODO: Implement other categories
-                            if (category == 'Oils' &&
-                                controller.getQuantity() == 0) {
+
+                            if (controller.getQuantity() == 0) {
                               Get.defaultDialog(
                                   backgroundColor: AppColors.darkColor,
                                   titleStyle: GoogleFonts.montserrat(
                                       color: Colors.white),
-                                  title: "Do you want to buy new oils?",
+                                  title: "Do you want to buy new products?",
                                   content: Container(),
                                   actions: [
                                     GestureDetector(
@@ -655,7 +655,7 @@ class Item extends StatelessWidget {
                                     GestureDetector(
                                       onTap: () async {
                                         const _url =
-                                            'https://senesimotorsport.com/product-category/oli-al-silicone/';
+                                            'https://senesimotorsport.com/';
 
                                         await canLaunch(_url)
                                             ? await launch(_url)
@@ -711,7 +711,6 @@ class Item extends StatelessWidget {
                     () => controller.getChanged()
                         ? GestureDetector(
                             onTap: () async {
-                              //FIXME: Fix Update not fading away
                               if (controller.getQuantity() == 0) {
                                 //DONE: Delete Item
                                 var url = UrlApp.url +
@@ -745,6 +744,8 @@ class Item extends StatelessWidget {
                               }
                             },
                             child: Container(
+                              alignment: Alignment.centerLeft,
+                              width: Get.width * 0.2,
                               decoration: BoxDecoration(
                                 color: AppColors.mainColor,
                                 borderRadius: BorderRadius.circular(40),
