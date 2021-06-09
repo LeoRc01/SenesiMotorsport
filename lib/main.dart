@@ -1,4 +1,5 @@
 import 'package:SenesiMotorsport/logs/loginPage.dart';
+import 'package:SenesiMotorsport/pages/loadingpage.dart';
 import 'package:SenesiMotorsport/pages/mainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
@@ -30,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       home: isLoggedIn == null
-          ? LoginPage()
+          ? LoadingPage()
           : isLoggedIn
               ? MainPage()
               : LoginPage(),

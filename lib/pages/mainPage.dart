@@ -30,15 +30,12 @@ class _MainPageState extends State<MainPage> {
   TextEditingController nameController = new TextEditingController();
   TextEditingController descController = new TextEditingController();
 
-  Controller countNameLetters = new Controller();
-  Controller countDescLetters = new Controller();
+  Controller countNameLetters;
+  Controller countDescLetters;
+  Controller mainPageController = new Controller();
 
   int maxNameLetters = 15;
   int maxDescLetters = 20;
-
-  List<dynamic> allItems = [];
-
-  Controller mainPageController = new Controller();
 
   SharedPreferences sharedPreferences;
 
@@ -49,6 +46,9 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     initializeSharedPrefs().then((value) {
+      countNameLetters = new Controller();
+      countDescLetters = new Controller();
+
       UserEmail.userEmail = sharedPreferences.getString("email");
       getAllBags();
 /*
@@ -64,12 +64,13 @@ class _MainPageState extends State<MainPage> {
   }
 
   getAllBags() async {
-    allItems.removeRange(0, allItems.length);
+    mainPageController.itemList
+        .removeRange(0, mainPageController.itemList.length);
     mainPageController.setIsLoading();
     var url = UrlApp.url + "/showAllBags.php?email=" + UserEmail.userEmail;
     Response res = await http.get(url).then((value) {
-      allItems = jsonDecode(value.body);
-      print(allItems);
+      mainPageController.itemList = jsonDecode(value.body);
+      print(mainPageController.itemList);
       mainPageController.setNotLoadingLoading();
     }).catchError((error) {
       Get.snackbar("Error", "No Internet");
@@ -322,7 +323,7 @@ class _MainPageState extends State<MainPage> {
                           ],
                         ),
                       ),
-                      allItems.length == 0
+                      mainPageController.itemList.length == 0
                           ? Expanded(
                               child: Center(
                                 child: Text("No items available.",
@@ -339,13 +340,17 @@ class _MainPageState extends State<MainPage> {
                                   shrinkWrap: true,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
-                                  itemCount: allItems.length,
+                                  itemCount: mainPageController.itemList.length,
                                   itemBuilder: (context, index) {
                                     return new BagTile(
                                       image: "assets/bag.png",
-                                      title: allItems[index]['bagName'],
-                                      desc: allItems[index]['description'],
-                                      bagID: allItems[index]['bagID'],
+                                      title: mainPageController.itemList[index]
+                                          ['bagName'],
+                                      desc: mainPageController.itemList[index]
+                                          ['description'],
+                                      bagID: mainPageController.itemList[index]
+                                          ['bagID'],
+                                      mainPageController: mainPageController,
                                     );
                                   },
                                   staggeredTileBuilder: (index) =>
@@ -380,8 +385,15 @@ class BagTile extends StatefulWidget {
   final desc;
   final image;
   final bagID;
+  Controller mainPageController;
 
-  const BagTile({Key key, this.title, this.desc, this.image, this.bagID})
+  BagTile(
+      {Key key,
+      this.title,
+      this.desc,
+      this.image,
+      this.bagID,
+      this.mainPageController})
       : super(key: key);
 
   @override
@@ -441,9 +453,12 @@ class _BagTileState extends State<BagTile> {
   deleteBag(int bagID) async {
     var url = UrlApp.url + "/deleteBag.php?bagId=" + bagID.toString();
     Response response = await http.get(url).then((value) {
-      Get.back();
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => MainPage()));
+      widget.mainPageController.itemList
+          .removeWhere((element) => element["bagID"] == widget.bagID);
+      print(widget.mainPageController.itemList);
+      Get.forceAppUpdate();
+      //Navigator.pushReplacement(
+      //context, MaterialPageRoute(builder: (context) => MainPage()));
 
       Get.snackbar("Done!", "Bag deleted correctly!");
     }).catchError((error) {

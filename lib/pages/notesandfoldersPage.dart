@@ -29,7 +29,7 @@ class NoteAndFolders extends StatefulWidget {
 
 class _NoteAndFoldersState extends State<NoteAndFolders>
     with SingleTickerProviderStateMixin {
-  List<dynamic> contentPage = [];
+  //List<dynamic> contentPage = [];
 
   Controller controller;
 
@@ -66,7 +66,8 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           "&email=" +
           UserEmail.userEmail;
       Response response = await http.get(url).then((value) {
-        contentPage = jsonDecode(value.body);
+        controller.itemList = jsonDecode(value.body);
+        print(controller.itemList);
         controller.setNotLoadingLoading();
         //print(contentPage);
       }).catchError((onError) {
@@ -188,7 +189,8 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
             icon: Icons.note_add,
             titleStyle: TextStyle(fontSize: 16, color: Colors.white),
             onPress: () {
-              Get.to(() => NotePage.newNote("", "", true, widget.insideOf));
+              Get.to(() =>
+                  NotePage.newNote("", "", true, widget.insideOf, controller));
             },
           ),
         ],
@@ -254,7 +256,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                           ],
                         ),
                       ),
-                      contentPage.length == 0
+                      controller.itemList.length == 0
                           ? Expanded(
                               child: Center(
                                 child: Text("No items available.",
@@ -269,14 +271,16 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
                               padding: EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: contentPage.length,
+                              itemCount: controller.itemList.length,
                               itemBuilder: (context, index) {
                                 return ItemTile(
-                                    contentPage[index]["itemId"],
-                                    contentPage[index]["title"],
-                                    int.parse(contentPage[index]["isFolder"]),
-                                    contentPage[index]["content"],
-                                    widget.insideOf);
+                                    controller.itemList[index]["itemId"],
+                                    controller.itemList[index]["title"],
+                                    int.parse(
+                                        controller.itemList[index]["isFolder"]),
+                                    controller.itemList[index]["content"],
+                                    widget.insideOf,
+                                    controller);
                               },
                               staggeredTileBuilder: (index) =>
                                   StaggeredTile.fit(1)),
@@ -295,12 +299,13 @@ class ItemTile extends StatelessWidget {
   String insideOf;
   int isFolder;
   String noteContent;
+  Controller controller;
 
   String setTitle = "";
 
   TextEditingController itemNameController;
 
-  ItemTile(itemId, title, isFolder, noteContent, insideOf) {
+  ItemTile(itemId, title, isFolder, noteContent, insideOf, controller) {
     itemNameController = new TextEditingController();
     itemNameController.text = title;
     this.noteContent = noteContent;
@@ -308,6 +313,7 @@ class ItemTile extends StatelessWidget {
     this.title = title;
     this.isFolder = isFolder;
     this.insideOf = insideOf;
+    this.controller = controller;
   }
   updateItemTitle(uuid) async {
     var url = UrlApp.url +
@@ -336,7 +342,10 @@ class ItemTile extends StatelessWidget {
         UserEmail.userEmail;
     Response response = await http.get(url).then((value) {
       print(value.body);
-      Get.back();
+      controller.itemList
+          .removeWhere((element) => element["itemId"] == this.itemId);
+      Get.forceAppUpdate();
+      //Get.back();
     }).catchError((onError) {
       Get.back();
       Get.snackbar("Error", "No Internet connection.");

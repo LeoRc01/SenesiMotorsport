@@ -30,7 +30,7 @@ class ShowItemsPage extends StatefulWidget {
 Controller showItemsPagecontroller;
 
 List<Item> selectedItems = [];
-List<Item> itemList = [];
+//List<Item> itemList = [];
 
 class _ShowItemsPageState extends State<ShowItemsPage> {
   //DONE: Show all items from database
@@ -54,7 +54,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
 
   getAllItems() async {
     allItems.removeRange(0, allItems.length);
-    itemList.removeRange(0, itemList.length);
+    showItemsPagecontroller.itemList
+        .removeRange(0, showItemsPagecontroller.itemList.length);
     showItemsPagecontroller.setIsLoading();
     var url = UrlApp.url + "/showAllItems.php?email=" + UserEmail.userEmail;
     Response res = await http.get(url).then((value) {
@@ -83,9 +84,10 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
           itemID: item['itemId'],
           state: widget.comingFromPage,
         );
-        itemList.add(temp);
+        showItemsPagecontroller.itemList.add(temp);
       }
-      itemList = itemList.reversed.toList();
+      showItemsPagecontroller.itemList =
+          showItemsPagecontroller.itemList.reversed.toList();
       showItemsPagecontroller.setNotLoadingLoading();
     }).catchError((error) {
       Get.snackbar("Error", "No Internet");
@@ -277,12 +279,14 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                               ? Center(
                                   child: CircularProgressIndicator(),
                                 )
-                              : itemList.length != 0
+                              : showItemsPagecontroller.itemList.length != 0
                                   ? ListView.builder(
                                       shrinkWrap: true,
-                                      itemCount: itemList.length,
+                                      itemCount: showItemsPagecontroller
+                                          .itemList.length,
                                       itemBuilder: (context, index) {
-                                        return itemList[index];
+                                        return showItemsPagecontroller
+                                            .itemList[index];
                                       })
                                   : Expanded(
                                       child: Center(

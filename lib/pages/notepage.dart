@@ -17,6 +17,7 @@ class NotePage extends StatefulWidget {
   String noteContent;
   String insideOf;
   bool isNew;
+  Controller otherPageController;
 
   NotePage(title, itemId, noteContent, insideOf) {
     this.title = title;
@@ -24,9 +25,11 @@ class NotePage extends StatefulWidget {
     this.noteContent = noteContent;
     this.insideOf = insideOf;
     this.isNew = false;
+    //this.otherPageController = controller;
   }
 
-  NotePage.newNote(this.title, this.noteContent, this.isNew, this.insideOf);
+  NotePage.newNote(this.title, this.noteContent, this.isNew, this.insideOf,
+      this.otherPageController);
 
   @override
   _NotePageState createState() => _NotePageState();
@@ -81,8 +84,17 @@ class _NotePageState extends State<NotePage> {
         "&email=" +
         UserEmail.userEmail;
     Response res = await http.get(url).then((value) {
-      Navigator.pop(context);
-      Navigator.pop(context);
+      Map<String, dynamic> data = {
+        "title": titleController.text,
+        "content": contentController.text,
+        "isFolder": 0.toString(),
+        "itemId": uuid,
+      };
+      widget.otherPageController.itemList.add(data);
+      Get.back();
+      //Get.forceAppUpdate();
+      //Navigator.pop(context);
+      //Navigator.pop(context);
     });
   }
 
