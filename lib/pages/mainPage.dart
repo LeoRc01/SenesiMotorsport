@@ -530,6 +530,7 @@ class _BagTileState extends State<BagTile> {
           children: [
             Image.asset(
               widget.image.toString(),
+              fit: BoxFit.contain,
             ),
             Text(
               widget.title.toString(),

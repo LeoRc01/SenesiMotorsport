@@ -267,35 +267,33 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                     ),
 
                     //BODY PAGE
-                    RefreshIndicator(
-                      onRefresh: () {
-                        return getAllItems();
-                      },
-                      child: Obx(
-                        () => showItemsPagecontroller.getLoading()
-                            ? Center(
-                                child: CircularProgressIndicator(),
-                              )
-                            : itemList.length != 0
-                                ? Container(
-                                    height: Get.height -
-                                        MediaQuery.of(context).padding.top * 3,
-                                    child: ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: itemList.length,
-                                        itemBuilder: (context, index) {
-                                          return itemList[index];
-                                        }),
-                                  )
-                                : Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        "You have no items available.",
-                                        style: GoogleFonts.montserrat(
-                                            color: Colors.white),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () {
+                          return getAllItems();
+                        },
+                        child: Obx(
+                          () => showItemsPagecontroller.getLoading()
+                              ? Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : itemList.length != 0
+                                  ? ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: itemList.length,
+                                      itemBuilder: (context, index) {
+                                        return itemList[index];
+                                      })
+                                  : Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          "You have no items available.",
+                                          style: GoogleFonts.montserrat(
+                                              color: Colors.white),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                        ),
                       ),
                     ),
                   ],
@@ -461,13 +459,13 @@ class _ItemState extends State<Item> {
                             updateItem();
                           },
                           child: Container(
-                            width: Get.width * 0.2,
+                            //width: Get.width * 0.2,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(40),
                             ),
                             padding: EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 15),
+                                vertical: 5, horizontal: 10),
                             child: Center(
                               child: Text(
                                 "Update",

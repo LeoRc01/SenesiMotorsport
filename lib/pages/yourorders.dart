@@ -110,11 +110,10 @@ class _YourOrdersState extends State<YourOrders> {
                 children: [
                   appBar(),
                   controller.getHasOrderedSomething()
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Container(
-                              height: Get.height -
-                                  MediaQuery.of(context).padding.top * 3,
+                      ? Expanded(
+                          child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               child: ListView.builder(
                                   shrinkWrap: true,
                                   itemCount: 3,
@@ -122,9 +121,7 @@ class _YourOrdersState extends State<YourOrders> {
                                     return OrderItemTile(orderedItems[index]);
                                   })),
                         )
-                      : Container(
-                          height: Get.height,
-                          alignment: Alignment.center,
+                      : Expanded(
                           child: Center(
                             child: Text(
                               "You don't have any orders from SenesiMotorSport",

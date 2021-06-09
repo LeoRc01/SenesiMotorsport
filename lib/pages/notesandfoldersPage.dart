@@ -161,6 +161,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
       //Init Floating Action Bubble
@@ -295,12 +296,13 @@ class ItemTile extends StatelessWidget {
   int isFolder;
   String noteContent;
 
+  String setTitle = "";
+
   TextEditingController itemNameController;
 
   ItemTile(itemId, title, isFolder, noteContent, insideOf) {
     itemNameController = new TextEditingController();
-    itemNameController.text =
-        title.length <= 10 ? title : title.substring(0, 10) + "...";
+    itemNameController.text = title;
     this.noteContent = noteContent;
     this.itemId = itemId;
     this.title = title;
@@ -315,7 +317,7 @@ class ItemTile extends StatelessWidget {
         uuid +
         "&email=" +
         UserEmail.userEmail;
-    print(uuid);
+    //∂print(uuid);
     Response response = await http.get(url).then((value) {
       print(value.body);
     }).catchError((onError) {
@@ -391,8 +393,11 @@ class ItemTile extends StatelessWidget {
           child: TextField(
             onEditingComplete: () {
               if (itemNameController.text.length <= 20) {
+                title = itemNameController.text;
                 updateItemTitle(itemId);
+                Get.back();
                 FocusScope.of(context).unfocus();
+                print(itemNameController.text);
               } else {
                 Get.snackbar("Error!",
                     "Name too long.\nIt must not be over 20 characters!");
