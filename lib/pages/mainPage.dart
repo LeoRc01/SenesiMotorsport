@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:SenesiMotorsport/pages/searchItem.dart';
+import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:SenesiMotorsport/pages/yourorders.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
@@ -294,6 +296,14 @@ class _MainPageState extends State<MainPage> {
                                 children: [
                                   IconButton(
                                       icon: FaIcon(
+                                        FontAwesomeIcons.search,
+                                        color: AppColors.darkColor,
+                                      ),
+                                      onPressed: () {
+                                        Get.to(() => SearchItemPage());
+                                      }),
+                                  IconButton(
+                                      icon: FaIcon(
                                         FontAwesomeIcons.listAlt,
                                         color: AppColors.darkColor,
                                       ),
@@ -334,28 +344,33 @@ class _MainPageState extends State<MainPage> {
                                     )),
                               ),
                             )
-                          : Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              child: StaggeredGridView.countBuilder(
-                                  crossAxisCount: 2,
-                                  shrinkWrap: true,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                  itemCount: mainPageController.itemList.length,
-                                  itemBuilder: (context, index) {
-                                    return new BagTile(
-                                      image: "assets/bag.png",
-                                      title: mainPageController.itemList[index]
-                                          ['bagName'],
-                                      desc: mainPageController.itemList[index]
-                                          ['description'],
-                                      bagID: mainPageController.itemList[index]
-                                          ['bagID'],
-                                      mainPageController: mainPageController,
-                                    );
-                                  },
-                                  staggeredTileBuilder: (index) =>
-                                      StaggeredTile.fit(1)),
+                          : Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: StaggeredGridView.countBuilder(
+                                    physics: BouncingScrollPhysics(),
+                                    scrollDirection: Axis.vertical,
+                                    crossAxisCount: 2,
+                                    shrinkWrap: true,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    itemCount:
+                                        mainPageController.itemList.length,
+                                    itemBuilder: (context, index) {
+                                      return new BagTile(
+                                        image: "assets/bag.png",
+                                        title: mainPageController
+                                            .itemList[index]['bagName'],
+                                        desc: mainPageController.itemList[index]
+                                            ['description'],
+                                        bagID: mainPageController
+                                            .itemList[index]['bagID'],
+                                        mainPageController: mainPageController,
+                                      );
+                                    },
+                                    staggeredTileBuilder: (index) =>
+                                        StaggeredTile.fit(1)),
+                              ),
                             ),
                     ],
                   ),
@@ -471,51 +486,58 @@ class _BagTileState extends State<BagTile> {
   Widget build(BuildContext context) {
     //DONE: Implement "Delete Bag"
     return GestureDetector(
-      onTap: () => showCupertinoModalBottomSheet(
-        expand: false,
-        context: context,
-        duration: Duration(milliseconds: 1300),
-        builder: (context) {
-          return Material(
-              child: CupertinoPageScaffold(
-            navigationBar: CupertinoNavigationBar(
-              leading: Container(),
-              backgroundColor: AppColors.darkColor,
-              middle: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  Get.to(
-                      () => ShowItemsPage(
-                            bagID: widget.bagID,
-                          ),
-                      transition: Transition.zoom);
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.mainColor,
-                    borderRadius: BorderRadius.circular(15),
+      onTap: () => list.length == 0
+          ? Get.to(
+              () => ShowItemsPage(
+                    bagID: widget.bagID,
                   ),
-                  child: Text(
-                    "Add Item",
-                    style: GoogleFonts.montserrat(color: Colors.white),
+              transition: Transition.zoom)
+          : showCupertinoModalBottomSheet(
+              expand: false,
+              context: context,
+              //duration: Duration(milliseconds: 800),
+              builder: (context) {
+                return Material(
+                    child: CupertinoPageScaffold(
+                  navigationBar: CupertinoNavigationBar(
+                    leading: Container(),
+                    backgroundColor: AppColors.darkColor,
+                    middle: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.to(
+                            () => ShowItemsPage(
+                                  bagID: widget.bagID,
+                                ),
+                            transition: Transition.zoom);
+                      },
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.mainColor,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Text(
+                          "Add Item",
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                  backgroundColor: AppColors.darkColor,
+                  child: SafeArea(
+                    child: ListView(
+                      reverse: false,
+                      shrinkWrap: true,
+                      controller: ModalScrollController.of(context),
+                      physics: BouncingScrollPhysics(),
+                      children: list,
+                    ),
+                  ),
+                ));
+              },
             ),
-            backgroundColor: AppColors.darkColor,
-            child: SafeArea(
-              child: ListView(
-                reverse: false,
-                shrinkWrap: true,
-                controller: ModalScrollController.of(context),
-                physics: BouncingScrollPhysics(),
-                children: list,
-              ),
-            ),
-          ));
-        },
-      ),
       onLongPress: () {
         Get.defaultDialog(
           content: Text("Are you sure you want to delete this bag?",
@@ -532,39 +554,46 @@ class _BagTileState extends State<BagTile> {
           },
         );
       },
-      child: Container(
-        height: 250,
-        width: 100,
+      child: CupertinoCard(
+        color: AppColors.darkColor,
+        radius: BorderRadius.all(
+          new Radius.circular(65.0),
+        ),
+        //height: 250,
+        //width: 100,
         padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        decoration: BoxDecoration(
+        /*decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: AppColors.darkColor,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              widget.image.toString(),
-              fit: BoxFit.contain,
-            ),
-            Text(
-              widget.title.toString(),
-              style: GoogleFonts.montserrat(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: Get.width * 0.04),
-            ),
-            Text(
-              widget.desc.toString().length > 25
-                  ? widget.desc.toString().substring(0, 23) + "..."
-                  : widget.desc.toString(),
-              style: GoogleFonts.montserrat(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w300,
-                  fontSize: Get.width * 0.04),
-            )
-          ],
+        ),*/
+        child: Container(
+          height: 250,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.asset(
+                widget.image.toString(),
+                fit: BoxFit.contain,
+              ),
+              Text(
+                widget.title.toString(),
+                style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: Get.width * 0.04),
+              ),
+              Text(
+                widget.desc.toString().length > 25
+                    ? widget.desc.toString().substring(0, 23) + "..."
+                    : widget.desc.toString(),
+                style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w300,
+                    fontSize: Get.width * 0.04),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -760,20 +789,21 @@ class Item extends StatelessWidget {
                                 });
                               }
                             },
-                            child: Container(
-                              alignment: Alignment.centerLeft,
-                              width: Get.width * 0.2,
-                              decoration: BoxDecoration(
-                                color: AppColors.mainColor,
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 5, horizontal: 15),
-                              child: Center(
-                                child: Text(
-                                  "Update",
-                                  style: GoogleFonts.montserrat(
-                                      color: Colors.white),
+                            child: Expanded(
+                              child: Container(
+                                alignment: Alignment.centerLeft,
+                                decoration: BoxDecoration(
+                                  color: AppColors.mainColor,
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 15),
+                                child: Center(
+                                  child: Text(
+                                    "Update",
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.white),
+                                  ),
                                 ),
                               ),
                             ),

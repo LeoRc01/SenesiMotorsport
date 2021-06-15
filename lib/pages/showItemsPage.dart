@@ -7,12 +7,14 @@ import 'package:SenesiMotorsport/pages/createItemPage.dart';
 import 'package:SenesiMotorsport/pages/mainPage.dart';
 import 'package:SenesiMotorsport/url/url.dart';
 import 'package:badges/badges.dart';
+import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ShowItemsPage extends StatefulWidget {
   final bagID;
@@ -332,18 +334,21 @@ class _ItemState extends State<Item> {
     initQuantity = widget.quantity;
   }
 
+  deleteItem() async {
+    var url = UrlApp.url + "/deleteItem.php?itemId=" + widget.itemID.toString();
+    Response response = await http.get(url).then((value) {
+      Get.back();
+      Get.to(() => ShowItemsPage(), transition: Transition.noTransition);
+      Get.snackbar("Done!", "Item deleted correctly");
+    }).catchError((error) {
+      Get.snackbar("Error", "No Internet");
+    });
+  }
+
   updateItem() async {
     if (widget.quantity == 0) {
       //Elimino l'elemento
-      var url =
-          UrlApp.url + "/deleteItem.php?itemId=" + widget.itemID.toString();
-      Response response = await http.get(url).then((value) {
-        Get.back();
-        Get.to(() => ShowItemsPage(), transition: Transition.noTransition);
-        Get.snackbar("Done!", "Item deleted correctly");
-      }).catchError((error) {
-        Get.snackbar("Error", "No Internet");
-      });
+      deleteItem();
     } else {
       //Aggiorno l'elemento
       var url = UrlApp.url +
@@ -387,103 +392,128 @@ class _ItemState extends State<Item> {
           }
         });
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        width: Get.width,
-        height: 100,
-        decoration: BoxDecoration(
-          color: selectedColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                width: Get.width / 4,
-                child: Image.asset(widget.image)),
-            Container(
-              width: Get.width / 4,
-              child: Center(
-                child: Text(
-                  widget.text,
-                  style: GoogleFonts.montserrat(color: Colors.white),
-                ),
-              ),
-            ),
-            Expanded(
-              //width: Get.width / 4,
+      child: Slidable(
+        actionPane: SlidableDrawerActionPane(),
+        actionExtentRatio: 0.25,
+        actions: [
+          GestureDetector(
+            onTap: () {
+              deleteItem();
+            },
+            child: CupertinoCard(
+              color: Colors.red,
+              radius: BorderRadius.all(new Radius.circular(50)),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                          icon: FaIcon(
-                            FontAwesomeIcons.minus,
-                            color: Colors.white,
-                            size: Get.width * 0.03,
-                          ),
-                          onPressed: () {
-                            if (!click) {
-                              if (widget.quantity > 0) {
-                                setState(() {
-                                  widget.quantity--;
-                                });
-                              }
-                            }
-                          }),
-                      Text(
-                        widget.quantity.toString(),
-                        style: GoogleFonts.montserrat(color: Colors.white),
-                      ),
-                      IconButton(
-                          icon: FaIcon(
-                            FontAwesomeIcons.plus,
-                            color: Colors.white,
-                            size: Get.width * 0.03,
-                          ),
-                          onPressed: () {
-                            if (!click) {
-                              setState(() {
-                                widget.quantity++;
-                              });
-                            }
-                          }),
-                    ],
-                  ),
-                  (initQuantity != widget.quantity && !click)
-                      ? GestureDetector(
-                          onTap: () async {
-                            //DONE: implement update item
-
-                            updateItem();
-                          },
-                          child: Container(
-                            //width: Get.width * 0.2,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 10),
-                            child: Center(
-                              child: Text(
-                                "Update",
-                                style:
-                                    GoogleFonts.montserrat(color: Colors.black),
-                              ),
-                            ),
-                          ),
-                        )
-                      : Container(),
+                  FaIcon(FontAwesomeIcons.trash, color: Colors.white),
+                  Text(
+                    "Delete",
+                    style: GoogleFonts.montserrat(color: Colors.white),
+                  )
                 ],
               ),
             ),
-          ],
+          ),
+        ],
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          width: Get.width,
+          height: 100,
+          decoration: BoxDecoration(
+            color: selectedColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  width: Get.width / 4,
+                  child: Image.asset(widget.image)),
+              Container(
+                width: Get.width / 4,
+                child: Center(
+                  child: Text(
+                    widget.text,
+                    style: GoogleFonts.montserrat(color: Colors.white),
+                  ),
+                ),
+              ),
+              Expanded(
+                //width: Get.width / 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                            icon: FaIcon(
+                              FontAwesomeIcons.minus,
+                              color: Colors.white,
+                              size: Get.width * 0.03,
+                            ),
+                            onPressed: () {
+                              if (!click) {
+                                if (widget.quantity > 0) {
+                                  setState(() {
+                                    widget.quantity--;
+                                  });
+                                }
+                              }
+                            }),
+                        Text(
+                          widget.quantity.toString(),
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                        IconButton(
+                            icon: FaIcon(
+                              FontAwesomeIcons.plus,
+                              color: Colors.white,
+                              size: Get.width * 0.03,
+                            ),
+                            onPressed: () {
+                              if (!click) {
+                                setState(() {
+                                  widget.quantity++;
+                                });
+                              }
+                            }),
+                      ],
+                    ),
+                    (initQuantity != widget.quantity && !click)
+                        ? GestureDetector(
+                            onTap: () async {
+                              //DONE: implement update item
+
+                              updateItem();
+                            },
+                            child: Container(
+                              //width: Get.width * 0.2,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 5, horizontal: 10),
+                              child: Center(
+                                child: Text(
+                                  "Update",
+                                  style: GoogleFonts.montserrat(
+                                      color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
