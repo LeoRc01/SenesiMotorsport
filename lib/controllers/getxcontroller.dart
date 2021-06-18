@@ -3,6 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class Controller extends GetxController {
+  /*
+  THEME PART
+  */
+
+  var backGroundColorTheme = AppColors.darkColor.obs;
+  var textColorTheme = Colors.white.obs;
+  var isDarkTheme = true.obs;
+
+  getBackGroundColorTheme() => backGroundColorTheme.value;
+  getTextColorTheme() => textColorTheme.value;
+
+  changeToLightTheme() {
+    backGroundColorTheme(Colors.white);
+    textColorTheme(AppColors.darkColor);
+    isDarkTheme(false);
+  }
+
+  changeToDarkTheme() {
+    textColorTheme(Colors.white);
+    backGroundColorTheme(AppColors.darkColor);
+    isDarkTheme(true);
+  }
+
+  /**/
+
   var quantity = 0.obs;
   var hasChanged = 0.obs;
 

@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:SenesiMotorsport/main.dart';
 import 'package:SenesiMotorsport/pages/searchItem.dart';
 import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:SenesiMotorsport/pages/yourorders.dart';
+import 'package:flutter/services.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/email.dart';
@@ -84,296 +86,309 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      /*
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        actions: [
-          IconButton(
-              icon: FaIcon(
-                FontAwesomeIcons.listAlt,
-                color: Colors.white,
-              ),
-              onPressed: null)
-        ],
-        title: Text(
-          "Your Bags",
-          style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w500, fontSize: Get.width * 0.07),
-        ),
-        backgroundColor: Colors.transparent,
-      ),*/
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.defaultDialog(
-            backgroundColor: AppColors.darkColor,
-            title: "Create your bag!",
-            titleStyle: GoogleFonts.montserrat(color: Colors.red),
-            content: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Form(
-                key: createBagKey,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TitleTile(title: "Name"),
-                        Obx(
-                          () => TitleTile(
-                            title: countNameLetters.getQuantity().toString() +
-                                "/" +
-                                maxNameLetters.toString(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 10),
-                      padding: EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: TextFormField(
-                        onChanged: (value) {
-                          countNameLetters
-                              .setQuantity(nameController.text.length);
-                        },
-                        controller: nameController,
-                        validator: (value) {
-                          if (value.length > maxNameLetters) {
-                            return "Name too long.";
-                          }
-                          if (value.isEmpty) {
-                            return "Please insert a name.";
-                          }
-                        },
-                        textAlign: TextAlign.center,
-                        textAlignVertical: TextAlignVertical.top,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Max 10 characters",
-                          hintStyle: GoogleFonts.montserrat(),
-                        ),
-                        style: GoogleFonts.montserrat(),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TitleTile(title: "Description"),
-                        Obx(
-                          () => TitleTile(
-                            title: countDescLetters.getQuantity().toString() +
-                                "/" +
-                                maxDescLetters.toString(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 10),
-                      padding: EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: TextFormField(
-                        onChanged: (value) {
-                          countDescLetters
-                              .setQuantity(descController.text.length);
-                        },
-                        controller: descController,
-                        validator: (value) {
-                          if (value.length > 20) {
-                            return "Description too long.";
-                          }
-                          if (value.isEmpty) {
-                            return "Please insert a description.";
-                          }
-                        },
-                        textAlign: TextAlign.center,
-                        textAlignVertical: TextAlignVertical.top,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Max 20 characters",
-                          hintStyle: GoogleFonts.montserrat(),
-                        ),
-                        style: GoogleFonts.montserrat(),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        //DONE: Add bag
-
-                        if (createBagKey.currentState.validate()) {
-                          Get.back();
-                          print(nameController.text.trim());
-
-                          var url = UrlApp.url +
-                              "/createBag.php?bagName=" +
-                              nameController.text.trim() +
-                              "&desc=" +
-                              descController.text.trim() +
-                              "&email=" +
-                              UserEmail.userEmail;
-                          Response response = await http.get(url).then((value) {
-                            countDescLetters.setQuantity(0);
-                            countNameLetters.setQuantity(0);
-                            Get.snackbar("Done!", "Bag created successfully!");
-                            nameController.text = "";
-                            descController.text = "";
-                            getAllBags();
-                          }).catchError((error) {
-                            Get.snackbar("Error", "No internet.");
-                          });
-                        }
-                      },
-                      child: Container(
-                        margin: EdgeInsets.symmetric(vertical: 10),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.mainColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          "Create",
-                          style: GoogleFonts.montserrat(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-        child: FaIcon(FontAwesomeIcons.plus),
-        backgroundColor: AppColors.darkColor,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/bg.jpg"),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: RefreshIndicator(
-          onRefresh: () {
-            return getAllBags();
-          },
-          child: Obx(
-            () => mainPageController.getLoading()
-                ? Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : Column(
+    return Obx(
+      () => Scaffold(
+        resizeToAvoidBottomInset: false,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Get.defaultDialog(
+              backgroundColor: colorController.getBackGroundColorTheme(),
+              title: "Create your bag!",
+              titleStyle: GoogleFonts.montserrat(color: Colors.red),
+              content: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Form(
+                  key: createBagKey,
+                  child: Column(
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          TitleTile(title: "Name"),
+                          Obx(
+                            () => TitleTile(
+                              title: countNameLetters.getQuantity().toString() +
+                                  "/" +
+                                  maxNameLetters.toString(),
+                            ),
+                          ),
+                        ],
+                      ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        margin: EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              child: IconButton(
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.signOutAlt,
-                                    color: AppColors.darkColor,
-                                  ),
-                                  onPressed: () {
-                                    woocommerce.logUserOut();
-                                    Get.off(() => LoginPage());
-                                  }),
-                            ),
-                            Container(
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.search,
-                                        color: AppColors.darkColor,
-                                      ),
-                                      onPressed: () {
-                                        Get.to(() => SearchItemPage());
-                                      }),
-                                  IconButton(
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.listAlt,
-                                        color: AppColors.darkColor,
-                                      ),
-                                      onPressed: () {
-                                        Get.to(() =>
-                                            ShowItemsPage.comingFromPage(true));
-                                      }),
-                                  IconButton(
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.user,
-                                        color: AppColors.darkColor,
-                                      ),
-                                      onPressed: () {
-                                        Get.to(() => YourOrders());
-                                      }),
-                                  IconButton(
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.stickyNote,
-                                        color: AppColors.darkColor,
-                                      ),
-                                      onPressed: () {
-                                        Get.to(() => NoteAndFolders(
-                                            "mainpage", "Your folders"));
-                                      }),
-                                ],
-                              ),
-                            ),
-                          ],
+                        margin: EdgeInsets.symmetric(vertical: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: TextFormField(
+                          onChanged: (value) {
+                            countNameLetters
+                                .setQuantity(nameController.text.length);
+                          },
+                          controller: nameController,
+                          validator: (value) {
+                            if (value.length > maxNameLetters) {
+                              return "Name too long.";
+                            }
+                            if (value.isEmpty) {
+                              return "Please insert a name.";
+                            }
+                          },
+                          textAlign: TextAlign.center,
+                          textAlignVertical: TextAlignVertical.top,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Max 10 characters",
+                            hintStyle: GoogleFonts.montserrat(),
+                          ),
+                          style: GoogleFonts.montserrat(),
                         ),
                       ),
-                      mainPageController.itemList.length == 0
-                          ? Expanded(
-                              child: Center(
-                                child: Text("No items available.",
-                                    style: GoogleFonts.montserrat(
-                                      color: Colors.white,
-                                      fontSize: Get.width * 0.05,
-                                    )),
-                              ),
-                            )
-                          : Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 20),
-                                child: StaggeredGridView.countBuilder(
-                                    physics: BouncingScrollPhysics(),
-                                    scrollDirection: Axis.vertical,
-                                    crossAxisCount: 2,
-                                    shrinkWrap: true,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                    itemCount:
-                                        mainPageController.itemList.length,
-                                    itemBuilder: (context, index) {
-                                      return new BagTile(
-                                        image: "assets/bag.png",
-                                        title: mainPageController
-                                            .itemList[index]['bagName'],
-                                        desc: mainPageController.itemList[index]
-                                            ['description'],
-                                        bagID: mainPageController
-                                            .itemList[index]['bagID'],
-                                        mainPageController: mainPageController,
-                                      );
-                                    },
-                                    staggeredTileBuilder: (index) =>
-                                        StaggeredTile.fit(1)),
-                              ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          TitleTile(title: "Description"),
+                          Obx(
+                            () => TitleTile(
+                              title: countDescLetters.getQuantity().toString() +
+                                  "/" +
+                                  maxDescLetters.toString(),
                             ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: TextFormField(
+                          onChanged: (value) {
+                            countDescLetters
+                                .setQuantity(descController.text.length);
+                          },
+                          controller: descController,
+                          validator: (value) {
+                            if (value.length > 20) {
+                              return "Description too long.";
+                            }
+                            if (value.isEmpty) {
+                              return "Please insert a description.";
+                            }
+                          },
+                          textAlign: TextAlign.center,
+                          textAlignVertical: TextAlignVertical.top,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Max 20 characters",
+                            hintStyle: GoogleFonts.montserrat(),
+                          ),
+                          style: GoogleFonts.montserrat(),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          //DONE: Add bag
+
+                          if (createBagKey.currentState.validate()) {
+                            Get.back();
+                            print(nameController.text.trim());
+
+                            var url = UrlApp.url +
+                                "/createBag.php?bagName=" +
+                                nameController.text.trim() +
+                                "&desc=" +
+                                descController.text.trim() +
+                                "&email=" +
+                                UserEmail.userEmail;
+                            Response response =
+                                await http.get(url).then((value) {
+                              countDescLetters.setQuantity(0);
+                              countNameLetters.setQuantity(0);
+                              Get.snackbar(
+                                  "Done!", "Bag created successfully!");
+                              nameController.text = "";
+                              descController.text = "";
+                              getAllBags();
+                            }).catchError((error) {
+                              Get.snackbar("Error", "No internet.");
+                            });
+                          }
+                        },
+                        child: Container(
+                          margin: EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.mainColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            "Create",
+                            style: GoogleFonts.montserrat(color: Colors.white),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                ),
+              ),
+            );
+          },
+          child: FaIcon(
+            FontAwesomeIcons.plus,
+            color: colorController.getTextColorTheme(),
+          ),
+          backgroundColor: colorController.getBackGroundColorTheme(),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/bg.jpg"),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: RefreshIndicator(
+            onRefresh: () {
+              return getAllBags();
+            },
+            child: Obx(
+              () => mainPageController.getLoading()
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          margin: EdgeInsets.only(
+                              top: MediaQuery.of(context).padding.top),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                child: IconButton(
+                                    icon: FaIcon(
+                                      FontAwesomeIcons.signOutAlt,
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                    ),
+                                    onPressed: () {
+                                      woocommerce.logUserOut();
+                                      Get.off(() => LoginPage());
+                                    }),
+                              ),
+                              Container(
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                        icon: FaIcon(
+                                          colorController.isDarkTheme.value
+                                              ? FontAwesomeIcons.sun
+                                              : FontAwesomeIcons.moon,
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                        ),
+                                        onPressed: () {
+                                          print(colorController
+                                              .isDarkTheme.value);
+                                          colorController.isDarkTheme.value
+                                              ? colorController
+                                                  .changeToLightTheme()
+                                              : colorController
+                                                  .changeToDarkTheme();
+                                        }),
+                                    IconButton(
+                                        icon: FaIcon(
+                                          FontAwesomeIcons.search,
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                        ),
+                                        onPressed: () {
+                                          Get.to(() => SearchItemPage());
+                                        }),
+                                    IconButton(
+                                        icon: FaIcon(
+                                          FontAwesomeIcons.listAlt,
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                        ),
+                                        onPressed: () {
+                                          Get.to(() =>
+                                              ShowItemsPage.comingFromPage(
+                                                  true));
+                                        }),
+                                    IconButton(
+                                        icon: FaIcon(
+                                          FontAwesomeIcons.user,
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                        ),
+                                        onPressed: () {
+                                          Get.to(() => YourOrders());
+                                        }),
+                                    IconButton(
+                                        icon: FaIcon(
+                                          FontAwesomeIcons.stickyNote,
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                        ),
+                                        onPressed: () {
+                                          Get.to(() => NoteAndFolders(
+                                              "mainpage", "Your folders"));
+                                        }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        mainPageController.itemList.length == 0
+                            ? Expanded(
+                                child: Center(
+                                  child: Text("No items available.",
+                                      style: GoogleFonts.montserrat(
+                                        color:
+                                            colorController.getTextColorTheme(),
+                                        fontSize: Get.width * 0.05,
+                                      )),
+                                ),
+                              )
+                            : Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20),
+                                  child: StaggeredGridView.countBuilder(
+                                      physics: BouncingScrollPhysics(),
+                                      scrollDirection: Axis.vertical,
+                                      crossAxisCount: 2,
+                                      shrinkWrap: true,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                      itemCount:
+                                          mainPageController.itemList.length,
+                                      itemBuilder: (context, index) {
+                                        return new BagTile(
+                                          image: "assets/bag.png",
+                                          title: mainPageController
+                                              .itemList[index]['bagName'],
+                                          desc: mainPageController
+                                              .itemList[index]['description'],
+                                          bagID: mainPageController
+                                              .itemList[index]['bagID'],
+                                          mainPageController:
+                                              mainPageController,
+                                        );
+                                      },
+                                      staggeredTileBuilder: (index) =>
+                                          StaggeredTile.fit(1)),
+                                ),
+                              ),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),
@@ -391,7 +406,9 @@ class TitleTile extends StatelessWidget {
     return Text(
       title.toString(),
       textAlign: TextAlign.left,
-      style: GoogleFonts.montserrat(color: Colors.white),
+      style: GoogleFonts.montserrat(
+        color: colorController.getTextColorTheme(),
+      ),
     );
   }
 }
@@ -501,7 +518,7 @@ class _BagTileState extends State<BagTile> {
                     child: CupertinoPageScaffold(
                   navigationBar: CupertinoNavigationBar(
                     leading: Container(),
-                    backgroundColor: AppColors.darkColor,
+                    backgroundColor: colorController.getBackGroundColorTheme(),
                     middle: GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
@@ -525,7 +542,7 @@ class _BagTileState extends State<BagTile> {
                       ),
                     ),
                   ),
-                  backgroundColor: AppColors.darkColor,
+                  backgroundColor: colorController.getBackGroundColorTheme(),
                   child: SafeArea(
                     child: ListView(
                       reverse: false,
@@ -541,13 +558,17 @@ class _BagTileState extends State<BagTile> {
       onLongPress: () {
         Get.defaultDialog(
           content: Text("Are you sure you want to delete this bag?",
-              style: GoogleFonts.montserrat(color: Colors.white)),
-          backgroundColor: AppColors.darkColor,
+              style: GoogleFonts.montserrat(
+                color: colorController.getTextColorTheme(),
+              )),
+          backgroundColor: colorController.getBackGroundColorTheme(),
           title: "Delete this bag?",
           textConfirm: "Yes",
-          confirmTextColor: Colors.white,
+          confirmTextColor: colorController.getBackGroundColorTheme(),
           textCancel: "No",
-          titleStyle: GoogleFonts.montserrat(color: Colors.white),
+          titleStyle: GoogleFonts.montserrat(
+            color: colorController.getTextColorTheme(),
+          ),
           onConfirm: () {
             deleteBag(int.parse(widget.bagID));
             Get.back();
@@ -555,7 +576,7 @@ class _BagTileState extends State<BagTile> {
         );
       },
       child: CupertinoCard(
-        color: AppColors.darkColor,
+        color: colorController.getBackGroundColorTheme(),
         radius: BorderRadius.all(
           new Radius.circular(65.0),
         ),
@@ -579,7 +600,7 @@ class _BagTileState extends State<BagTile> {
               Text(
                 widget.title.toString(),
                 style: GoogleFonts.montserrat(
-                    color: Colors.white,
+                    color: colorController.getTextColorTheme(),
                     fontWeight: FontWeight.w500,
                     fontSize: Get.width * 0.04),
               ),
@@ -588,7 +609,7 @@ class _BagTileState extends State<BagTile> {
                     ? widget.desc.toString().substring(0, 23) + "..."
                     : widget.desc.toString(),
                 style: GoogleFonts.montserrat(
-                    color: Colors.white,
+                    color: colorController.getTextColorTheme(),
                     fontWeight: FontWeight.w300,
                     fontSize: Get.width * 0.04),
               )
@@ -637,7 +658,9 @@ class Item extends StatelessWidget {
         height: 100,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white),
+          border: Border.all(
+            color: colorController.getTextColorTheme(),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -651,7 +674,9 @@ class Item extends StatelessWidget {
               child: Center(
                 child: Text(
                   text,
-                  style: GoogleFonts.montserrat(color: Colors.white),
+                  style: GoogleFonts.montserrat(
+                    color: colorController.getTextColorTheme(),
+                  ),
                 ),
               ),
             ),
@@ -666,7 +691,7 @@ class Item extends StatelessWidget {
                       IconButton(
                           icon: FaIcon(
                             FontAwesomeIcons.minus,
-                            color: Colors.white,
+                            color: colorController.getTextColorTheme(),
                             size: Get.width * 0.03,
                           ),
                           onPressed: () {
@@ -675,9 +700,11 @@ class Item extends StatelessWidget {
 
                             if (controller.getQuantity() == 0) {
                               Get.defaultDialog(
-                                  backgroundColor: AppColors.darkColor,
+                                  backgroundColor:
+                                      colorController.getBackGroundColorTheme(),
                                   titleStyle: GoogleFonts.montserrat(
-                                      color: Colors.white),
+                                    color: colorController.getTextColorTheme(),
+                                  ),
                                   title: "Do you want to buy new products?",
                                   content: Container(),
                                   actions: [
@@ -733,13 +760,15 @@ class Item extends StatelessWidget {
                       Obx(
                         () => Text(
                           controller.quantity.toString(),
-                          style: GoogleFonts.montserrat(color: Colors.white),
+                          style: GoogleFonts.montserrat(
+                            color: colorController.getTextColorTheme(),
+                          ),
                         ),
                       ),
                       IconButton(
                           icon: FaIcon(
                             FontAwesomeIcons.plus,
-                            color: Colors.white,
+                            color: colorController.getTextColorTheme(),
                             size: Get.width * 0.03,
                           ),
                           onPressed: () {

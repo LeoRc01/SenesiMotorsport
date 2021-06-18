@@ -22,15 +22,17 @@ class _SearchItemPageState extends State<SearchItemPage> {
 
   Future<dynamic> foundItems(String like) async {
     controller.itemList.removeRange(0, controller.itemList.length);
-    controller.setIsLoading();
-    var url = UrlApp.url + "/searchItem.php?like=" + like;
-    Request request = await http.get(url).then((value) {
-      controller.itemList = jsonDecode(value.body);
-      controller.setNotLoadingLoading();
-    }).catchError((onError) {
-      controller.setNotLoadingLoading();
-      Get.snackbar("Error", onError.toString());
-    });
+    if (like != "") {
+      controller.setIsLoading();
+      var url = UrlApp.url + "/searchItem.php?like=" + like;
+      Request request = await http.get(url).then((value) {
+        controller.itemList = jsonDecode(value.body);
+        controller.setNotLoadingLoading();
+      }).catchError((onError) {
+        controller.setNotLoadingLoading();
+        Get.snackbar("Error", onError.toString());
+      });
+    }
   }
 
   @override
@@ -45,75 +47,72 @@ class _SearchItemPageState extends State<SearchItemPage> {
           ),
         ),
         child: Obx(
-          () => controller.getLoading()
-              ? Center(
-                  child: CircularProgressIndicator(),
-                )
-              : Column(
+          () => Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                margin:
+                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            child: IconButton(
-                                icon: FaIcon(
-                                  FontAwesomeIcons.chevronLeft,
-                                  color: AppColors.darkColor,
-                                ),
-                                onPressed: () {
-                                  Get.back();
-                                }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: controller.itemList.isNotEmpty
-                          ? ListView.builder(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: controller.itemList.length,
-                              itemBuilder: (context, index) {
-                                return FoundItemTile(
-                                    controller.itemList[index]["itemName"],
-                                    controller.itemList[index]["bagName"]);
-                              })
-                          : Text("No items found.",
-                              style: GoogleFonts.montserrat(
-                                  fontSize: Get.width * 0.05)),
-                    ),
-                    SafeArea(
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
+                      child: IconButton(
+                          icon: FaIcon(
+                            FontAwesomeIcons.chevronLeft,
                             color: AppColors.darkColor,
-                            borderRadius: BorderRadius.circular(30)),
-                        alignment: Alignment.bottomCenter,
-                        child: TextFormField(
-                          enabled: true,
-                          autocorrect: false,
-                          style: GoogleFonts.montserrat(color: Colors.white),
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(30)),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 20),
-                              hintText: "Insert the name of the item",
-                              hintStyle:
-                                  GoogleFonts.montserrat(color: Colors.grey)),
-                          controller: nameController,
-                          onEditingComplete: () {
-                            foundItems(nameController.text);
-                          },
-                        ),
-                      ),
+                          ),
+                          onPressed: () {
+                            Get.back();
+                          }),
                     ),
                   ],
                 ),
+              ),
+              Expanded(
+                child: controller.getLoading()
+                    ? Center(child: CircularProgressIndicator())
+                    : controller.itemList.isNotEmpty
+                        ? ListView.builder(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: controller.itemList.length,
+                            itemBuilder: (context, index) {
+                              return FoundItemTile(
+                                  controller.itemList[index]["itemName"],
+                                  controller.itemList[index]["bagName"]);
+                            })
+                        : Text("No items found.",
+                            style: GoogleFonts.montserrat(
+                                fontSize: Get.width * 0.05)),
+              ),
+              SafeArea(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                      color: AppColors.darkColor,
+                      borderRadius: BorderRadius.circular(30)),
+                  alignment: Alignment.bottomCenter,
+                  child: TextFormField(
+                    autofocus: true,
+                    enabled: true,
+                    autocorrect: false,
+                    style: GoogleFonts.montserrat(color: Colors.white),
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                        hintText: "Insert the name of the item",
+                        hintStyle: GoogleFonts.montserrat(color: Colors.grey)),
+                    controller: nameController,
+                    onChanged: (value) {
+                      //print(value);
+                      foundItems(nameController.text);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
