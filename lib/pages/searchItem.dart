@@ -38,6 +38,7 @@ class _SearchItemPageState extends State<SearchItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.darkColor,
       body: Container(
         decoration: BoxDecoration(
@@ -86,6 +87,7 @@ class _SearchItemPageState extends State<SearchItemPage> {
                                 fontSize: Get.width * 0.05)),
               ),
               SafeArea(
+                top: false,
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -110,6 +112,9 @@ class _SearchItemPageState extends State<SearchItemPage> {
                     },
                   ),
                 ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).viewInsets.bottom,
               ),
             ],
           ),
