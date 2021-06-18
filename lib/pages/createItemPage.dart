@@ -12,6 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:woocommerce/models/order.dart';
 
+import '../main.dart';
+
 class CreateItemPage extends StatefulWidget {
   final bagID;
 
@@ -50,25 +52,29 @@ class _CreateItemPageState extends State<CreateItemPage> {
         value: "Tyres",
         child: Text(
           "Tyres",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Engine",
         child: Text(
           "Engine",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Tools",
         child: Text(
           "Tools",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Oils",
         child: Text(
           "Oils",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
   ];
 
@@ -109,7 +115,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
               : Container(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
-                    color: AppColors.darkColor,
+                    color: colorController.getBackGroundColorTheme(),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Form(
@@ -134,14 +140,16 @@ class _CreateItemPageState extends State<CreateItemPage> {
                               width: Get.width / 2.7,
                               child: DropdownButton<String>(
                                 elevation: 0,
-                                dropdownColor: AppColors.darkColor,
+                                dropdownColor:
+                                    colorController.getBackGroundColorTheme(),
                                 isExpanded: true,
                                 hint: Obx(
                                   () => Text(
                                     getX_Controller.selectedCategoryValue
                                         .toString(),
                                     style: GoogleFonts.montserrat(
-                                        color: Colors.white),
+                                        color: colorController
+                                            .getTextColorTheme()),
                                   ),
                                 ),
                                 items: items,
@@ -357,7 +365,8 @@ class _CategoryButtonState extends State<CategoryButton> {
         child: Center(
             child: Text(
           widget.categoryName,
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
       ),
     );
@@ -406,7 +415,7 @@ class InputTile extends StatelessWidget {
           }
         }
       },
-      style: GoogleFonts.montserrat(color: Colors.white),
+      style: GoogleFonts.montserrat(color: colorController.getTextColorTheme()),
       textAlignVertical: TextAlignVertical.top,
       decoration: InputDecoration(
         enabledBorder: const OutlineInputBorder(

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
+import 'package:SenesiMotorsport/main.dart';
 import 'package:SenesiMotorsport/pages/createItemPage.dart';
 import 'package:SenesiMotorsport/pages/mainPage.dart';
 import 'package:SenesiMotorsport/url/url.dart';
@@ -132,8 +133,11 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.darkColor,
-        child: FaIcon(FontAwesomeIcons.plus),
+        backgroundColor: colorController.getBackGroundColorTheme(),
+        child: FaIcon(
+          FontAwesomeIcons.plus,
+          color: colorController.getTextColorTheme(),
+        ),
         onPressed: () {
           Get.to(CreateItemPage(widget.bagID), transition: Transition.zoom);
         },
@@ -165,7 +169,11 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                           Row(
                             children: [
                               IconButton(
-                                icon: FaIcon(FontAwesomeIcons.chevronLeft),
+                                icon: FaIcon(
+                                  FontAwesomeIcons.chevronLeft,
+                                  color:
+                                      colorController.getBackGroundColorTheme(),
+                                ),
                                 onPressed: () {
                                   Get.back();
                                 },
@@ -173,7 +181,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                               Text(
                                 "Your Items",
                                 style: GoogleFonts.montserrat(
-                                    color: AppColors.darkColor,
+                                    color: colorController
+                                        .getBackGroundColorTheme(),
                                     fontSize: Get.width * 0.07,
                                     fontWeight: FontWeight.w500),
                               ),
@@ -189,9 +198,10 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                                         Get.defaultDialog(
                                             title: "Add these items?",
                                             titleStyle: GoogleFonts.montserrat(
-                                                color: Colors.white),
-                                            backgroundColor:
-                                                AppColors.darkColor,
+                                                color: colorController
+                                                    .getTextColorTheme()),
+                                            backgroundColor: colorController
+                                                .getBackGroundColorTheme(),
                                             content: Container(),
                                             actions: [
                                               GestureDetector(
@@ -251,16 +261,19 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                                       child: Badge(
                                         shape: BadgeShape.circle,
                                         toAnimate: true,
-                                        badgeColor: AppColors.darkColor,
+                                        badgeColor: colorController
+                                            .getBackGroundColorTheme(),
                                         position: BadgePosition.topStart(),
                                         badgeContent: Text(
                                           showItemsPagecontroller.quantity
                                               .toString(),
                                           style: GoogleFonts.montserrat(
-                                              color: Colors.white),
+                                              color: colorController
+                                                  .getTextColorTheme()),
                                         ),
-                                        child:
-                                            Icon(Icons.shopping_bag_outlined),
+                                        child: Icon(Icons.shopping_bag_outlined,
+                                            color: colorController
+                                                .getBackGroundColorTheme()),
                                       ),
                                     ),
                                   ),
@@ -325,7 +338,7 @@ class Item extends StatefulWidget {
 }
 
 class _ItemState extends State<Item> {
-  Color selectedColor = AppColors.darkColor;
+  Color selectedColor = colorController.getBackGroundColorTheme();
   bool click = false;
   int initQuantity = 0;
   @override
@@ -386,7 +399,7 @@ class _ItemState extends State<Item> {
           } else {
             selectedItems.remove(widget);
             showItemsPagecontroller.decrementQuantity();
-            selectedColor = AppColors.darkColor;
+            selectedColor = colorController.getBackGroundColorTheme();
             click = !click;
             print(selectedItems);
           }
@@ -424,7 +437,7 @@ class _ItemState extends State<Item> {
           decoration: BoxDecoration(
             color: selectedColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white),
+            border: Border.all(color: AppColors.mainColor),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -438,7 +451,8 @@ class _ItemState extends State<Item> {
                 child: Center(
                   child: Text(
                     widget.text,
-                    style: GoogleFonts.montserrat(color: Colors.white),
+                    style: GoogleFonts.montserrat(
+                        color: colorController.getTextColorTheme()),
                   ),
                 ),
               ),
@@ -453,7 +467,7 @@ class _ItemState extends State<Item> {
                         IconButton(
                             icon: FaIcon(
                               FontAwesomeIcons.minus,
-                              color: Colors.white,
+                              color: colorController.getTextColorTheme(),
                               size: Get.width * 0.03,
                             ),
                             onPressed: () {
@@ -467,12 +481,13 @@ class _ItemState extends State<Item> {
                             }),
                         Text(
                           widget.quantity.toString(),
-                          style: GoogleFonts.montserrat(color: Colors.white),
+                          style: GoogleFonts.montserrat(
+                              color: colorController.getTextColorTheme()),
                         ),
                         IconButton(
                             icon: FaIcon(
                               FontAwesomeIcons.plus,
-                              color: Colors.white,
+                              color: colorController.getTextColorTheme(),
                               size: Get.width * 0.03,
                             ),
                             onPressed: () {

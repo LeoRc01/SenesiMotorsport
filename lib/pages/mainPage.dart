@@ -4,7 +4,6 @@ import 'package:SenesiMotorsport/pages/searchItem.dart';
 import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:SenesiMotorsport/pages/yourorders.dart';
 import 'package:flutter/services.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
@@ -118,7 +117,7 @@ class _MainPageState extends State<MainPage> {
                         margin: EdgeInsets.symmetric(vertical: 10),
                         padding: EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorController.getTextColorTheme(),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: TextFormField(
@@ -140,7 +139,9 @@ class _MainPageState extends State<MainPage> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: "Max 10 characters",
-                            hintStyle: GoogleFonts.montserrat(),
+                            hintStyle: GoogleFonts.montserrat(
+                                color:
+                                    colorController.getBackGroundColorTheme()),
                           ),
                           style: GoogleFonts.montserrat(),
                         ),
@@ -162,7 +163,7 @@ class _MainPageState extends State<MainPage> {
                         margin: EdgeInsets.symmetric(vertical: 10),
                         padding: EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorController.getTextColorTheme(),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: TextFormField(
@@ -184,7 +185,9 @@ class _MainPageState extends State<MainPage> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: "Max 20 characters",
-                            hintStyle: GoogleFonts.montserrat(),
+                            hintStyle: GoogleFonts.montserrat(
+                                color:
+                                    colorController.getBackGroundColorTheme()),
                           ),
                           style: GoogleFonts.montserrat(),
                         ),
