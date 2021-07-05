@@ -1,3 +1,4 @@
+import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
 import 'package:SenesiMotorsport/logs/loginPage.dart';
 import 'package:SenesiMotorsport/pages/loadingpage.dart';
@@ -26,6 +27,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    Get.changeTheme(ThemeData.dark());
     woocommerce.isCustomerLoggedIn().then((value) {
       setState(() {
         isLoggedIn = value;
@@ -37,7 +39,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      theme: ThemeData.light(),
+      theme: Get.theme,
       home: isLoggedIn == null
           ? LoadingPage()
           : isLoggedIn

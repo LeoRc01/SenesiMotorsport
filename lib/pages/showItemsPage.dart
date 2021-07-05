@@ -93,7 +93,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
           showItemsPagecontroller.itemList.reversed.toList();
       showItemsPagecontroller.setNotLoadingLoading();
     }).catchError((error) {
-      Get.snackbar("Error", "No Internet");
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
       showItemsPagecontroller.setNotLoadingLoading();
     });
   }
@@ -116,7 +117,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
         str = value.body;
         print("Added Item: " + item.itemID);
       }).catchError((error) {
-        Get.snackbar("Error", "No Internet");
+        Get.snackbar("Error", "No Internet",
+            colorText: colorController.getBackGroundColorTheme());
       });
     }
     selectedItems.removeRange(0, selectedItems.length);
@@ -126,7 +128,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => MainPage()));
 
-    Get.snackbar("Done!", str);
+    Get.snackbar("Done!", str,
+        colorText: colorController.getBackGroundColorTheme());
   }
 
   @override
@@ -352,9 +355,11 @@ class _ItemState extends State<Item> {
     Response response = await http.get(url).then((value) {
       Get.back();
       Get.to(() => ShowItemsPage(), transition: Transition.noTransition);
-      Get.snackbar("Done!", "Item deleted correctly");
+      Get.snackbar("Done!", "Item deleted correctly",
+          colorText: colorController.getBackGroundColorTheme());
     }).catchError((error) {
-      Get.snackbar("Error", "No Internet");
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -371,12 +376,14 @@ class _ItemState extends State<Item> {
           widget.quantity.toString();
       Response response = await http.get(url).then((value) {
         print("Done!");
-        Get.snackbar("Done!", "Item updated correctly");
+        Get.snackbar("Done!", "Item updated correctly",
+            colorText: colorController.getBackGroundColorTheme());
         setState(() {
           initQuantity = widget.quantity;
         });
       }).catchError((error) {
-        Get.snackbar("Error", "No Internet.");
+        Get.snackbar("Error", "No Internet.",
+            colorText: colorController.getBackGroundColorTheme());
       });
     }
   }
@@ -443,7 +450,7 @@ class _ItemState extends State<Item> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 20),
                   width: Get.width / 4,
                   child: Image.asset(widget.image)),
               Container(

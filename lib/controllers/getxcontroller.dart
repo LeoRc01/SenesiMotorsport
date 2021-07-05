@@ -15,12 +15,14 @@ class Controller extends GetxController {
   getTextColorTheme() => textColorTheme.value;
 
   changeToLightTheme() {
+    Get.changeTheme(ThemeData.light());
     backGroundColorTheme(Colors.white);
     textColorTheme(AppColors.darkColor);
     isDarkTheme(false);
   }
 
   changeToDarkTheme() {
+    Get.changeTheme(ThemeData.dark());
     textColorTheme(Colors.white);
     backGroundColorTheme(AppColors.darkColor);
     isDarkTheme(true);
@@ -124,4 +126,18 @@ class Controller extends GetxController {
 
   getHasOrderedSomething() => hasOrderedSomething.value;
   setHasOrderedSomething(value) => hasOrderedSomething(value);
+
+  //CREATE ENGINE SECTION
+
+  var selectedDateBreakInString = "Select a date".obs;
+  var selectedDateRacePracticeString = "Select a date".obs;
+  var selectedDateMantainenceString = "Select a date".obs;
+
+  setDateBreakInString(value) => selectedDateBreakInString(value);
+  setDateRacePracticeString(value) => selectedDateRacePracticeString(value);
+  setDateMantainenceString(value) => selectedDateMantainenceString(value);
+
+  List<dynamic> breakInItemList = [].obs;
+  List<dynamic> race_practiceItemList = [].obs;
+  List<dynamic> mantainenceItemList = [].obs;
 }

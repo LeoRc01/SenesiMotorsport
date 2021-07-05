@@ -2,20 +2,19 @@ import 'dart:convert';
 
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
+import 'package:SenesiMotorsport/main.dart';
+import 'package:SenesiMotorsport/pages/mainPage.dart';
+import 'package:SenesiMotorsport/pages/showItemsPage.dart';
 import 'package:SenesiMotorsport/url/url.dart';
+import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
 
-class SearchItemPage extends StatefulWidget {
-  @override
-  _SearchItemPageState createState() => _SearchItemPageState();
-}
-
-class _SearchItemPageState extends State<SearchItemPage> {
+class SearchItemPage extends StatelessWidget {
   Controller controller = new Controller();
 
   TextEditingController nameController = new TextEditingController();
@@ -25,12 +24,14 @@ class _SearchItemPageState extends State<SearchItemPage> {
     if (like != "") {
       controller.setIsLoading();
       var url = UrlApp.url + "/searchItem.php?like=" + like;
-      Request request = await http.get(url).then((value) {
+      Response request = await http.get(url).then((value) {
         controller.itemList = jsonDecode(value.body);
+        print(controller.itemList);
         controller.setNotLoadingLoading();
       }).catchError((onError) {
         controller.setNotLoadingLoading();
-        Get.snackbar("Error", onError.toString());
+        Get.snackbar("Error", onError.toString(),
+            colorText: colorController.getBackGroundColorTheme());
       });
     }
   }
@@ -61,7 +62,7 @@ class _SearchItemPageState extends State<SearchItemPage> {
                       child: IconButton(
                           icon: FaIcon(
                             FontAwesomeIcons.chevronLeft,
-                            color: AppColors.darkColor,
+                            color: colorController.getBackGroundColorTheme(),
                           ),
                           onPressed: () {
                             Get.back();
@@ -80,25 +81,30 @@ class _SearchItemPageState extends State<SearchItemPage> {
                             itemBuilder: (context, index) {
                               return FoundItemTile(
                                   controller.itemList[index]["itemName"],
+                                  controller.itemList[index]["itemId"],
                                   controller.itemList[index]["bagName"]);
                             })
                         : Text("No items found.",
                             style: GoogleFonts.montserrat(
+                                color:
+                                    colorController.getBackGroundColorTheme(),
                                 fontSize: Get.width * 0.05)),
               ),
+              //BUILDING THE BOTTOM TEXTFIELD THAT STICKS TO THE KEYBOARD
               SafeArea(
                 top: false,
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                      color: AppColors.darkColor,
+                      color: colorController.getBackGroundColorTheme(),
                       borderRadius: BorderRadius.circular(30)),
                   alignment: Alignment.bottomCenter,
                   child: TextFormField(
                     autofocus: true,
                     enabled: true,
                     autocorrect: false,
-                    style: GoogleFonts.montserrat(color: Colors.white),
+                    style: GoogleFonts.montserrat(
+                        color: colorController.getTextColorTheme()),
                     decoration: InputDecoration(
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30)),
@@ -108,7 +114,13 @@ class _SearchItemPageState extends State<SearchItemPage> {
                     controller: nameController,
                     onChanged: (value) {
                       //print(value);
-                      foundItems(nameController.text);
+                      if (value.isEmpty) {
+                        print("empti");
+                        controller.itemList
+                            .removeRange(0, controller.itemList.length);
+                      } else {
+                        foundItems(nameController.text);
+                      }
                     },
                   ),
                 ),
@@ -126,35 +138,77 @@ class _SearchItemPageState extends State<SearchItemPage> {
 
 class FoundItemTile extends StatelessWidget {
   String itemName;
+  String itemId;
   String bagName;
 
-  FoundItemTile(this.itemName, this.bagName);
+  FoundItemTile(this.itemName, this.itemId, this.bagName);
+
+  deleteItem() async {
+    var url = UrlApp.url + "/deleteItem.php?itemId=" + itemId.toString();
+    Response response = await http.get(url).then((value) {
+      Get.back();
+      Get.offAll(() => MainPage());
+      Get.snackbar("Done!", "Item deleted correctly",
+          colorText: colorController.getBackGroundColorTheme());
+    }).catchError((error) {
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      width: Get.width,
-      decoration: BoxDecoration(
-        color: AppColors.darkColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.mainColor),
-      ),
-      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Text(itemName,
-              style: GoogleFonts.montserrat(
-                  color: Colors.white, fontSize: Get.width * 0.045)),
-          FaIcon(
-            FontAwesomeIcons.arrowDown,
-            color: Colors.white,
+    return Slidable(
+      actionPane: SlidableDrawerActionPane(),
+      actionExtentRatio: 0.25,
+      actions: [
+        GestureDetector(
+          onTap: () {
+            deleteItem();
+          },
+          child: CupertinoCard(
+            margin: EdgeInsets.only(bottom: 10, right: 5),
+            color: Colors.red,
+            radius: BorderRadius.all(new Radius.circular(50)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FaIcon(FontAwesomeIcons.trash, color: Colors.white),
+                Text(
+                  "Delete",
+                  style: GoogleFonts.montserrat(color: Colors.white),
+                )
+              ],
+            ),
           ),
-          Text(bagName,
-              style: GoogleFonts.montserrat(
-                  color: Colors.white, fontSize: Get.width * 0.045))
-        ],
+        ),
+      ],
+      child: Container(
+        margin: EdgeInsets.only(bottom: 10),
+        width: Get.width,
+        decoration: BoxDecoration(
+          color: colorController.getBackGroundColorTheme(),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.mainColor),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text(itemName,
+                style: GoogleFonts.montserrat(
+                    color: colorController.getTextColorTheme(),
+                    fontSize: Get.width * 0.045)),
+            FaIcon(
+              FontAwesomeIcons.arrowDown,
+              color: colorController.getTextColorTheme(),
+            ),
+            Text(bagName,
+                style: GoogleFonts.montserrat(
+                    color: colorController.getTextColorTheme(),
+                    fontSize: Get.width * 0.045))
+          ],
+        ),
       ),
     );
   }

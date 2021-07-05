@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:SenesiMotorsport/controllers/email.dart';
+import 'package:SenesiMotorsport/main.dart';
+
+import 'package:SenesiMotorsport/pages/enginePage.dart';
 import 'package:SenesiMotorsport/pages/notepage.dart';
 import 'package:uuid/uuid.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
@@ -53,6 +56,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
 
     _animation = Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
     folderNameController = new TextEditingController();
+    engineNameController = new TextEditingController();
     getContentPage(widget.insideOf);
     super.initState();
   }
@@ -73,25 +77,30 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
       }).catchError((onError) {
         print(onError);
         controller.setNotLoadingLoading();
-        Get.snackbar("Error", "No Internet");
+        Get.snackbar("Error", "No Internet",
+            colorText: colorController.getBackGroundColorTheme());
       });
     } catch (e) {
       controller.setNotLoadingLoading();
-      Get.snackbar("Error", "No Internet");
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
     }
   }
 
   final folderKeyForm = GlobalKey<FormState>();
   TextEditingController folderNameController;
+  TextEditingController engineNameController;
 
   createFolderDialog() {
     Get.defaultDialog(
       title: "Create a folder",
       titleStyle: GoogleFonts.montserrat(color: AppColors.mainColor),
-      backgroundColor: AppColors.darkColor,
+      backgroundColor: colorController.getBackGroundColorTheme(),
       barrierDismissible: true,
       middleText: "",
       textConfirm: "Create",
+      buttonColor: AppColors.mainColor,
+      cancelTextColor: AppColors.mainColor,
       onConfirm: () {
         print("sus");
         if (folderKeyForm.currentState.validate()) {
@@ -113,9 +122,12 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           },
           maxLength: 20,
           textAlignVertical: TextAlignVertical.center,
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
           decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             counterStyle: GoogleFonts.montserrat(color: Colors.white),
             //border: InputBorder.none,
             hintText: "Folder name",
@@ -139,12 +151,38 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
     Response response = await http.get(url).then((value) {
       insertCreatedItemIntoFolder(widget.insideOf, createdUUID).then((value) {
         Get.back();
-        Get.snackbar("Done!", "Folder created!");
+        Get.snackbar("Done!", "Folder created!",
+            colorText: colorController.getBackGroundColorTheme());
         getContentPage(widget.insideOf);
       });
     }).catchError((onError) {
       Get.back();
-      Get.snackbar("Error", "No Internet.");
+      Get.snackbar("Error", "No Internet.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
+
+  Future createEngine(uuid) async {
+    controller.setIsLoading();
+
+    var url = UrlApp.url +
+        "/createEngine.php?name=" +
+        engineNameController.text +
+        "&id=" +
+        uuid +
+        "&email=" +
+        UserEmail.userEmail;
+    Response res = await http.get(url).then((value) {
+      insertCreatedItemIntoFolder(widget.insideOf, uuid).then((value) {
+        controller.setNotLoadingLoading();
+        getContentPage(widget.insideOf);
+      }).catchError((onError) {
+        print("Error: " + onError.toString());
+      });
+    }).catchError((onError) {
+      controller.setNotLoadingLoading();
+      Get.snackbar("Error.", onError.toString(),
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -159,12 +197,56 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
     Response response = await http.get(url).then((value) {});
   }
 
+  final _key = GlobalKey<FormState>();
+
+  showCreateEngineDialog() {
+    Get.defaultDialog(
+        middleText: null,
+        title: "Create engine",
+        content: Form(
+          key: _key,
+          child: Column(
+            children: [
+              FormFieldInputTile(
+                maxLength: 20,
+                hintText: "Engine name",
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return "Please insert a name";
+                  }
+                },
+                controller: engineNameController,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              AddDataButton(
+                onTap: () {
+                  if (_key.currentState.validate()) {
+                    String engineID = uuid.v1();
+                    Get.back();
+                    createEngine(engineID).then((value) {
+                      String name = engineNameController.text;
+                      Get.to(() => EnginePage(
+                          engineId: engineID,
+                          insideOf: widget.insideOf,
+                          name: name));
+                      engineNameController.text = "";
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
+/*
       //Init Floating Action Bubble
       floatingActionButton: FloatingActionBubble(
         // Menu items
@@ -172,10 +254,11 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           // Floating action menu item
           Bubble(
             title: "Create Folder",
-            iconColor: Colors.white,
-            bubbleColor: AppColors.darkColor,
+            iconColor: colorController.getBackGroundColorTheme(),
+            bubbleColor: AppColors.mainColor,
             icon: Icons.folder,
-            titleStyle: TextStyle(fontSize: 16, color: Colors.white),
+            titleStyle: TextStyle(
+                fontSize: 16, color: colorController.getBackGroundColorTheme()),
             onPress: () {
               createFolderDialog();
               //_animationController.reverse();
@@ -184,13 +267,26 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           // Floating action menu item
           Bubble(
             title: "Create Note",
-            iconColor: Colors.white,
-            bubbleColor: AppColors.darkColor,
+            iconColor: colorController.getBackGroundColorTheme(),
+            bubbleColor: AppColors.mainColor,
             icon: Icons.note_add,
-            titleStyle: TextStyle(fontSize: 16, color: Colors.white),
+            titleStyle: TextStyle(
+                fontSize: 16, color: colorController.getBackGroundColorTheme()),
             onPress: () {
               Get.to(() =>
                   NotePage.newNote("", "", true, widget.insideOf, controller));
+            },
+          ),
+          // Floating action menu item
+          Bubble(
+            title: "Create Engine",
+            iconColor: colorController.getBackGroundColorTheme(),
+            bubbleColor: AppColors.mainColor,
+            icon: Icons.add,
+            titleStyle: TextStyle(
+                fontSize: 16, color: colorController.getBackGroundColorTheme()),
+            onPress: () {
+              showCreateEngineDialog();
             },
           ),
         ],
@@ -208,11 +304,12 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           isOpen = !isOpen;
         },
         // Floating Action button Icon color
-        iconColor: AppColors.darkColor,
+        iconColor: AppColors.mainColor,
 
         // Flaoting Action button Icon
         icon: AnimatedIcons.menu_arrow,
       ),
+      */
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -227,63 +324,161 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                 ? Center(
                     child: CircularProgressIndicator(),
                   )
-                : Column(
+                : Stack(
                     children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        margin: EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top),
-                        child: Row(
-                          children: [
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              child: IconButton(
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.chevronLeft,
-                                    color: AppColors.darkColor,
+                      Column(
+                        children: [
+                          /**APP BAR */
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            margin: EdgeInsets.only(
+                                top: MediaQuery.of(context).padding.top),
+                            child: Row(
+                              children: [
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  child: IconButton(
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.chevronLeft,
+                                        color: colorController
+                                            .getBackGroundColorTheme(),
+                                      ),
+                                      onPressed: () {
+                                        Get.back();
+                                      }),
+                                ),
+                                Text(
+                                  widget.title,
+                                  style: GoogleFonts.montserrat(
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                      fontSize: Get.width * 0.07,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                          /**BODYPAGE */
+                          controller.itemList.length == 0
+                              ? Expanded(
+                                  child: Center(
+                                    child: Text("No items available.",
+                                        style: GoogleFonts.montserrat(
+                                            color: colorController
+                                                .getBackGroundColorTheme(),
+                                            fontSize: Get.width * 0.05)),
                                   ),
-                                  onPressed: () {
-                                    Get.back();
-                                  }),
-                            ),
-                            Text(
-                              widget.title,
-                              style: GoogleFonts.montserrat(
-                                  color: AppColors.darkColor,
-                                  fontSize: Get.width * 0.07,
-                                  fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
+                                )
+                              : Expanded(
+                                  child: StaggeredGridView.countBuilder(
+                                      crossAxisCount: 2,
+                                      shrinkWrap: true,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 20),
+                                      itemCount: controller.itemList.length,
+                                      itemBuilder: (context, index) {
+                                        return ItemTile(
+                                            controller.itemList[index]
+                                                ["itemId"],
+                                            controller.itemList[index]["title"],
+                                            int.parse(controller.itemList[index]
+                                                ["isFolder"]),
+                                            controller.itemList[index]
+                                                ["content"],
+                                            widget.insideOf,
+                                            controller);
+                                      },
+                                      staggeredTileBuilder: (index) =>
+                                          StaggeredTile.fit(1)),
+                                ),
+                        ],
                       ),
-                      controller.itemList.length == 0
-                          ? Expanded(
-                              child: Center(
-                                child: Text("No items available.",
-                                    style: GoogleFonts.montserrat(
-                                        color: AppColors.darkColor,
-                                        fontSize: Get.width * 0.05)),
+                      /**BOTTOM BUTTON BAR */
+                      SafeArea(
+                          child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          margin: EdgeInsets.symmetric(horizontal: 30),
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          height: 60,
+                          width: Get.width,
+                          decoration: BoxDecoration(
+                            color: AppColors.mainColor,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  createFolderDialog();
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.create_new_folder,
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                    ),
+                                    Text("Create Folder",
+                                        style: GoogleFonts.montserrat(
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                          fontSize: Get.width * 0.025,
+                                        )),
+                                  ],
+                                ),
                               ),
-                            )
-                          : StaggeredGridView.countBuilder(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: controller.itemList.length,
-                              itemBuilder: (context, index) {
-                                return ItemTile(
-                                    controller.itemList[index]["itemId"],
-                                    controller.itemList[index]["title"],
-                                    int.parse(
-                                        controller.itemList[index]["isFolder"]),
-                                    controller.itemList[index]["content"],
-                                    widget.insideOf,
-                                    controller);
-                              },
-                              staggeredTileBuilder: (index) =>
-                                  StaggeredTile.fit(1)),
+                              GestureDetector(
+                                onTap: () {
+                                  Get.to(() => NotePage.newNote("", "", true,
+                                      widget.insideOf, controller));
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.note_add,
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                    ),
+                                    Text("Create Note",
+                                        style: GoogleFonts.montserrat(
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                          fontSize: Get.width * 0.025,
+                                        )),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  showCreateEngineDialog();
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add,
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                    ),
+                                    Text("Create Engine",
+                                        style: GoogleFonts.montserrat(
+                                          color: colorController
+                                              .getBackGroundColorTheme(),
+                                          fontSize: Get.width * 0.025,
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ))
                     ],
                   ),
           ),
@@ -328,7 +523,8 @@ class ItemTile extends StatelessWidget {
       print(value.body);
     }).catchError((onError) {
       Get.back();
-      Get.snackbar("Error", "No Internet connection.");
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -348,7 +544,23 @@ class ItemTile extends StatelessWidget {
       //Get.back();
     }).catchError((onError) {
       Get.back();
-      Get.snackbar("Error", "No Internet connection.");
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
+
+  deleteEngine(uuid) async {
+    var url = UrlApp.url + "/deleteEngine.php?itemId=" + uuid;
+    Response response = await http.get(url).then((value) {
+      print(value.body);
+      controller.itemList
+          .removeWhere((element) => element["itemId"] == this.itemId);
+      Get.forceAppUpdate();
+      //Get.back();
+    }).catchError((onError) {
+      Get.back();
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -363,6 +575,11 @@ class ItemTile extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => NoteAndFolders(itemId, title)));
+            } else if (isFolder == 2) {
+              Get.to(() => EnginePage(
+                  engineId: itemId,
+                  insideOf: insideOf,
+                  name: itemNameController.text));
             } else {
               Get.to(() => NotePage(title, itemId, noteContent, insideOf));
             }
@@ -370,26 +587,38 @@ class ItemTile extends StatelessWidget {
           onLongPress: () {
             Get.defaultDialog(
               content: Text("Are you sure you want to delete this item?",
-                  style: GoogleFonts.montserrat(color: Colors.white)),
-              backgroundColor: AppColors.darkColor,
+                  style: GoogleFonts.montserrat(
+                      color: colorController.getTextColorTheme())),
+              backgroundColor: colorController.getBackGroundColorTheme(),
               title: "Delete this item?",
               textConfirm: "Yes",
               confirmTextColor: Colors.white,
+              cancelTextColor: AppColors.mainColor,
+              buttonColor: AppColors.mainColor,
               textCancel: "No",
-              titleStyle: GoogleFonts.montserrat(color: Colors.white),
+              titleStyle: GoogleFonts.montserrat(
+                  color: colorController.getTextColorTheme()),
               onConfirm: () {
+                if (isFolder == 2) {
+                  print("Engine deleting");
+                  deleteEngine(itemId);
+                }
+
                 deleteItem(itemId);
+
                 Get.back();
               },
             );
           },
           child: Container(
             height: 180,
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             child: Image(
               image: isFolder == 1
                   ? AssetImage("assets/folder.png")
-                  : AssetImage("assets/note.png"),
+                  : isFolder == 2
+                      ? AssetImage("assets/engine.png")
+                      : AssetImage("assets/note.png"),
               fit: BoxFit.contain,
             ),
           ),
@@ -397,7 +626,7 @@ class ItemTile extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: AppColors.darkColor,
+            color: colorController.getBackGroundColorTheme(),
           ),
           child: TextField(
             onEditingComplete: () {
@@ -409,14 +638,16 @@ class ItemTile extends StatelessWidget {
                 print(itemNameController.text);
               } else {
                 Get.snackbar("Error!",
-                    "Name too long.\nIt must not be over 20 characters!");
+                    "Name too long.\nIt must not be over 20 characters!",
+                    colorText: colorController.getBackGroundColorTheme());
               }
             },
-            style: GoogleFonts.montserrat(color: Colors.white),
+            style: GoogleFonts.montserrat(
+                color: colorController.getTextColorTheme()),
             textAlign: TextAlign.center,
             textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 20),
+              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
             ),

@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 
+import '../main.dart';
 import 'notesandfoldersPage.dart';
 
 class NotePage extends StatefulWidget {
@@ -71,7 +72,8 @@ class _NotePageState extends State<NotePage> {
       insertNoteIntoFolder(widget.insideOf, uuid);
     }).catchError((onError) {
       Get.back();
-      Get.snackbar("Error", "No Internet connection.");
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -115,7 +117,8 @@ class _NotePageState extends State<NotePage> {
       Navigator.pop(context);
     }).catchError((onError) {
       Get.back();
-      Get.snackbar("Error", "No Internet connection.");
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 

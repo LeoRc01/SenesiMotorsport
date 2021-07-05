@@ -100,10 +100,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
       backgroundColor: AppColors.mainColor,
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/bg.jpg"),
-            fit: BoxFit.cover,
-          ),
+          color: colorController.getBackGroundColorTheme(),
         ),
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 100),
         width: Get.width,
@@ -221,7 +218,9 @@ class _CreateItemPageState extends State<CreateItemPage> {
                                   if (key.currentState.validate()) {
                                     if (getX_Controller.getQuantity() == 0) {
                                       Get.snackbar(
-                                          "Error", "Quantity can't be 0");
+                                          "Error", "Quantity can't be 0",
+                                          colorText: colorController
+                                              .getBackGroundColorTheme());
                                     } else {
                                       try {
                                         getX_Controller.setIsLoading();
@@ -257,13 +256,17 @@ class _CreateItemPageState extends State<CreateItemPage> {
                                             }
 
                                             Get.snackbar("Done!",
-                                                "Item inserted correctly");
+                                                "Item inserted correctly",
+                                                colorText: colorController
+                                                    .getBackGroundColorTheme());
                                           } else {
                                             getX_Controller
                                                 .setNotLoadingLoading();
                                             Get.snackbar("Error", value.body,
                                                 snackPosition:
-                                                    SnackPosition.BOTTOM);
+                                                    SnackPosition.BOTTOM,
+                                                colorText: colorController
+                                                    .getBackGroundColorTheme());
                                           }
                                         }).catchError((error) {
                                           getX_Controller
@@ -271,13 +274,16 @@ class _CreateItemPageState extends State<CreateItemPage> {
                                           print(error);
                                           Get.snackbar("Error", "No internet",
                                               snackPosition:
-                                                  SnackPosition.BOTTOM);
+                                                  SnackPosition.BOTTOM,
+                                              colorText: colorController
+                                                  .getBackGroundColorTheme());
                                         });
                                       } catch (e) {
                                         getX_Controller.setNotLoadingLoading();
                                         Get.snackbar("Error", e.toString(),
-                                            snackPosition:
-                                                SnackPosition.BOTTOM);
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            colorText: colorController
+                                                .getBackGroundColorTheme());
                                       }
                                     }
                                   }

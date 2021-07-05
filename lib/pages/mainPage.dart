@@ -14,6 +14,7 @@ import 'package:SenesiMotorsport/pages/showItemsPage.dart';
 import 'package:SenesiMotorsport/url/url.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -76,7 +77,8 @@ class _MainPageState extends State<MainPage> {
       print(mainPageController.itemList);
       mainPageController.setNotLoadingLoading();
     }).catchError((error) {
-      Get.snackbar("Error", "No Internet");
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
       mainPageController.setNotLoadingLoading();
     });
   }
@@ -143,7 +145,8 @@ class _MainPageState extends State<MainPage> {
                                 color:
                                     colorController.getBackGroundColorTheme()),
                           ),
-                          style: GoogleFonts.montserrat(),
+                          style: GoogleFonts.montserrat(
+                              color: colorController.getBackGroundColorTheme()),
                         ),
                       ),
                       Row(
@@ -189,7 +192,8 @@ class _MainPageState extends State<MainPage> {
                                 color:
                                     colorController.getBackGroundColorTheme()),
                           ),
-                          style: GoogleFonts.montserrat(),
+                          style: GoogleFonts.montserrat(
+                              color: colorController.getBackGroundColorTheme()),
                         ),
                       ),
                       GestureDetector(
@@ -211,13 +215,16 @@ class _MainPageState extends State<MainPage> {
                                 await http.get(url).then((value) {
                               countDescLetters.setQuantity(0);
                               countNameLetters.setQuantity(0);
-                              Get.snackbar(
-                                  "Done!", "Bag created successfully!");
+                              Get.snackbar("Done!", "Bag created successfully!",
+                                  colorText: colorController
+                                      .getBackGroundColorTheme());
                               nameController.text = "";
                               descController.text = "";
                               getAllBags();
                             }).catchError((error) {
-                              Get.snackbar("Error", "No internet.");
+                              Get.snackbar("Error", "No internet.",
+                                  colorText: colorController
+                                      .getBackGroundColorTheme());
                             });
                           }
                         },
@@ -470,19 +477,20 @@ class _BagTileState extends State<BagTile> {
             break;
         }
         Item temp = new Item(
-          image: image,
-          text: item['itemName'],
-          category: item['categoryName'],
-          itemID: item['itemId'],
-          quantity: int.parse(item['quantity'].toString()),
-          list: list,
-        );
+            image: image,
+            text: item['itemName'],
+            category: item['categoryName'],
+            itemID: item['itemId'],
+            quantity: int.parse(item['quantity'].toString()),
+            list: list,
+            bagID: widget.bagID);
         list.add(temp);
       }
     }).catchError((error) {
       print(error);
       Get.snackbar("Error", error.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -496,9 +504,11 @@ class _BagTileState extends State<BagTile> {
       //Navigator.pushReplacement(
       //context, MaterialPageRoute(builder: (context) => MainPage()));
 
-      Get.snackbar("Done!", "Bag deleted correctly!");
+      Get.snackbar("Done!", "Bag deleted correctly!",
+          colorText: colorController.getBackGroundColorTheme());
     }).catchError((error) {
-      Get.snackbar("Error", error.toString());
+      Get.snackbar("Error", error.toString(),
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -567,7 +577,9 @@ class _BagTileState extends State<BagTile> {
           backgroundColor: colorController.getBackGroundColorTheme(),
           title: "Delete this bag?",
           textConfirm: "Yes",
-          confirmTextColor: colorController.getBackGroundColorTheme(),
+          buttonColor: AppColors.mainColor,
+          cancelTextColor: AppColors.mainColor,
+          confirmTextColor: Colors.white,
           textCancel: "No",
           titleStyle: GoogleFonts.montserrat(
             color: colorController.getTextColorTheme(),
@@ -630,6 +642,7 @@ class Item extends StatelessWidget {
   final category;
   final itemID;
   int quantity;
+  final bagID;
   List list;
 
   bool changed = false;
@@ -637,11 +650,30 @@ class Item extends StatelessWidget {
   Item(
       {Key key,
       this.category,
+      this.bagID,
       this.image,
       this.text,
       this.quantity,
       this.itemID,
       this.list});
+
+  removeItemFromBag() async {
+    var url = UrlApp.url +
+        "/removeItemFromBag.php?itemId=" +
+        itemID.toString() +
+        "&bagId=" +
+        bagID.toString();
+    Response response = await http.get(url).then((value) {
+      Get.back();
+      Get.offAll(() => MainPage(), transition: Transition.noTransition);
+      Get.snackbar("Done!", "Item removed correctly",
+          colorText: colorController.getBackGroundColorTheme());
+    }).catchError((error) {
+      Get.snackbar("Error", "No Internet",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Controller controller = new Controller();
@@ -654,198 +686,233 @@ class Item extends StatelessWidget {
             ? await launch(_url)
             : throw 'Could not launch $_url';
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        width: Get.width,
-        height: 100,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colorController.getTextColorTheme(),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                width: Get.width / 4,
-                child: Image.asset(image)),
-            Container(
-              width: Get.width / 4,
-              child: Center(
-                child: Text(
-                  text,
-                  style: GoogleFonts.montserrat(
-                    color: colorController.getTextColorTheme(),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              //width: Get.width / 4,
+      child: Slidable(
+        actionPane: SlidableDrawerActionPane(),
+        actionExtentRatio: 0.25,
+        actions: [
+          GestureDetector(
+            onTap: () {
+              removeItemFromBag();
+            },
+            child: CupertinoCard(
+              margin: EdgeInsets.only(top: 20, bottom: 20, left: 20),
+              color: Colors.red,
+              radius: BorderRadius.all(new Radius.circular(50)),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                          icon: FaIcon(
-                            FontAwesomeIcons.minus,
-                            color: colorController.getTextColorTheme(),
-                            size: Get.width * 0.03,
-                          ),
-                          onPressed: () {
-                            controller.decrementQuantity();
-                            if (quantity > 0) quantity--;
-
-                            if (controller.getQuantity() == 0) {
-                              Get.defaultDialog(
-                                  backgroundColor:
-                                      colorController.getBackGroundColorTheme(),
-                                  titleStyle: GoogleFonts.montserrat(
-                                    color: colorController.getTextColorTheme(),
-                                  ),
-                                  title: "Do you want to buy new products?",
-                                  content: Container(),
-                                  actions: [
-                                    GestureDetector(
-                                      onTap: () => Get.back(),
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 10),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Colors.red),
-                                        child: Text(
-                                          "No",
-                                          style: GoogleFonts.montserrat(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        const _url =
-                                            'https://senesimotorsport.com/';
-
-                                        await canLaunch(_url)
-                                            ? await launch(_url)
-                                            : throw 'Could not launch $_url';
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 10),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: AppColors.mainColor),
-                                        child: Text(
-                                          "Yes",
-                                          style: GoogleFonts.montserrat(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ),
-                                  ]);
-                            }
-                            if (controller.getQuantity() == quantity) {
-                              controller.setToNotChanged();
-                            } else {
-                              controller.setToChanged();
-                            }
-                          }),
-                      Obx(
-                        () => Text(
-                          controller.quantity.toString(),
-                          style: GoogleFonts.montserrat(
-                            color: colorController.getTextColorTheme(),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                          icon: FaIcon(
-                            FontAwesomeIcons.plus,
-                            color: colorController.getTextColorTheme(),
-                            size: Get.width * 0.03,
-                          ),
-                          onPressed: () {
-                            controller.incrementQuantity();
-                            quantity++;
-                            if (controller.getQuantity() == quantity) {
-                              controller.setToNotChanged();
-                            } else {
-                              controller.setToChanged();
-                            }
-                          }),
-                    ],
-                  ),
-                  Obx(
-                    () => controller.getChanged()
-                        ? GestureDetector(
-                            onTap: () async {
-                              if (controller.getQuantity() == 0) {
-                                //DONE: Delete Item
-                                var url = UrlApp.url +
-                                    "/deleteItem.php?itemId=" +
-                                    itemID.toString();
-                                Response response =
-                                    await http.get(url).then((value) {
-                                  controller.setToNotChanged();
-                                  list.remove(this);
-                                  Get.back();
-                                  Get.snackbar(
-                                      "Done!", "Item deleted correctly");
-                                }).catchError((error) {
-                                  Get.snackbar("Error", error.toString());
-                                });
-                              } else {
-                                var url = UrlApp.url +
-                                    "/updateItemQuantity.php?itemId=" +
-                                    itemID +
-                                    "&quantity=" +
-                                    controller.getQuantity().toString();
-                                Response response =
-                                    await http.get(url).then((value) {
-                                  controller.setToNotChanged();
-                                  Get.back();
-                                  Get.snackbar(
-                                      "Done!", "Item updated correctly");
-                                }).catchError((error) {
-                                  Get.snackbar("Error", error.toString());
-                                });
-                              }
-                            },
-                            child: Expanded(
-                              child: Container(
-                                alignment: Alignment.centerLeft,
-                                decoration: BoxDecoration(
-                                  color: AppColors.mainColor,
-                                  borderRadius: BorderRadius.circular(40),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 15),
-                                child: Center(
-                                  child: Text(
-                                    "Update",
-                                    style: GoogleFonts.montserrat(
-                                        color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Container(),
-                  ),
+                  FaIcon(FontAwesomeIcons.minusCircle, color: Colors.white),
+                  Text(
+                    "Remove",
+                    style: GoogleFonts.montserrat(color: Colors.white),
+                  )
                 ],
               ),
             ),
-          ],
+          ),
+        ],
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          width: Get.width,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: colorController.getTextColorTheme(),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  width: Get.width / 4,
+                  child: Image.asset(image)),
+              Container(
+                width: Get.width / 4,
+                child: Center(
+                  child: Text(
+                    text,
+                    style: GoogleFonts.montserrat(
+                      color: colorController.getTextColorTheme(),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                //width: Get.width / 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                            icon: FaIcon(
+                              FontAwesomeIcons.minus,
+                              color: colorController.getTextColorTheme(),
+                              size: Get.width * 0.03,
+                            ),
+                            onPressed: () {
+                              controller.decrementQuantity();
+                              if (quantity > 0) quantity--;
+
+                              if (controller.getQuantity() == 0) {
+                                Get.defaultDialog(
+                                    backgroundColor: colorController
+                                        .getBackGroundColorTheme(),
+                                    titleStyle: GoogleFonts.montserrat(
+                                      color:
+                                          colorController.getTextColorTheme(),
+                                    ),
+                                    title: "Do you want to buy new products?",
+                                    content: Container(),
+                                    actions: [
+                                      GestureDetector(
+                                        onTap: () => Get.back(),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 10),
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.red),
+                                          child: Text(
+                                            "No",
+                                            style: GoogleFonts.montserrat(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          const _url =
+                                              'https://senesimotorsport.com/';
+
+                                          await canLaunch(_url)
+                                              ? await launch(_url)
+                                              : throw 'Could not launch $_url';
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 10),
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: AppColors.mainColor),
+                                          child: Text(
+                                            "Yes",
+                                            style: GoogleFonts.montserrat(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ),
+                                    ]);
+                              }
+                              if (controller.getQuantity() == quantity) {
+                                controller.setToNotChanged();
+                              } else {
+                                controller.setToChanged();
+                              }
+                            }),
+                        Obx(
+                          () => Text(
+                            controller.quantity.toString(),
+                            style: GoogleFonts.montserrat(
+                              color: colorController.getTextColorTheme(),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                            icon: FaIcon(
+                              FontAwesomeIcons.plus,
+                              color: colorController.getTextColorTheme(),
+                              size: Get.width * 0.03,
+                            ),
+                            onPressed: () {
+                              controller.incrementQuantity();
+                              quantity++;
+                              if (controller.getQuantity() == quantity) {
+                                controller.setToNotChanged();
+                              } else {
+                                controller.setToChanged();
+                              }
+                            }),
+                      ],
+                    ),
+                    Obx(
+                      () => controller.getChanged()
+                          ? GestureDetector(
+                              onTap: () async {
+                                if (controller.getQuantity() == 0) {
+                                  //DONE: Delete Item
+                                  var url = UrlApp.url +
+                                      "/deleteItem.php?itemId=" +
+                                      itemID.toString();
+                                  Response response =
+                                      await http.get(url).then((value) {
+                                    controller.setToNotChanged();
+                                    list.remove(this);
+                                    Get.back();
+                                    Get.snackbar(
+                                        "Done!", "Item deleted correctly",
+                                        colorText: colorController
+                                            .getBackGroundColorTheme());
+                                  }).catchError((error) {
+                                    Get.snackbar("Error", error.toString(),
+                                        colorText: colorController
+                                            .getBackGroundColorTheme());
+                                  });
+                                } else {
+                                  var url = UrlApp.url +
+                                      "/updateItemQuantity.php?itemId=" +
+                                      itemID +
+                                      "&quantity=" +
+                                      controller.getQuantity().toString();
+                                  Response response =
+                                      await http.get(url).then((value) {
+                                    controller.setToNotChanged();
+                                    Get.back();
+                                    Get.snackbar(
+                                        "Done!", "Item updated correctly",
+                                        colorText: colorController
+                                            .getBackGroundColorTheme());
+                                  }).catchError((error) {
+                                    Get.snackbar("Error", error.toString(),
+                                        colorText: colorController
+                                            .getBackGroundColorTheme());
+                                  });
+                                }
+                              },
+                              child: Expanded(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mainColor,
+                                    borderRadius: BorderRadius.circular(40),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 15),
+                                  child: Center(
+                                    child: Text(
+                                      "Update",
+                                      style: GoogleFonts.montserrat(
+                                          color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

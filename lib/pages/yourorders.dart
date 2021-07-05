@@ -2,6 +2,7 @@ import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
 import 'package:SenesiMotorsport/logs/loginPage.dart';
+import 'package:SenesiMotorsport/main.dart';
 import 'package:SenesiMotorsport/pages/createItemPage.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ class _YourOrdersState extends State<YourOrders> {
                 child: IconButton(
                     icon: FaIcon(
                       FontAwesomeIcons.chevronLeft,
-                      color: AppColors.darkColor,
+                      color: colorController.getBackGroundColorTheme(),
                     ),
                     onPressed: () {
                       Get.back();
@@ -37,7 +38,7 @@ class _YourOrdersState extends State<YourOrders> {
               Text(
                 "Your orders",
                 style: GoogleFonts.montserrat(
-                    color: AppColors.darkColor,
+                    color: colorController.getBackGroundColorTheme(),
                     fontSize: Get.width * 0.07,
                     fontWeight: FontWeight.w500),
               ),
@@ -88,7 +89,8 @@ class _YourOrdersState extends State<YourOrders> {
       controller.setNotLoadingLoading();
     }).catchError((error) {
       controller.setNotLoadingLoading();
-      Get.snackbar("Error!", error.toString());
+      Get.snackbar("Error!", error.toString(),
+          colorText: colorController.getBackGroundColorTheme());
     });
   }
 
@@ -116,7 +118,7 @@ class _YourOrdersState extends State<YourOrders> {
                                   const EdgeInsets.symmetric(horizontal: 20),
                               child: ListView.builder(
                                   shrinkWrap: true,
-                                  itemCount: 3,
+                                  itemCount: orderedItems.length,
                                   itemBuilder: (context, index) {
                                     return OrderItemTile(orderedItems[index]);
                                   })),
@@ -125,8 +127,9 @@ class _YourOrdersState extends State<YourOrders> {
                           child: Center(
                             child: Text(
                               "You don't have any orders from SenesiMotorSport",
-                              style:
-                                  GoogleFonts.montserrat(color: Colors.black),
+                              style: GoogleFonts.montserrat(
+                                  color: colorController
+                                      .getBackGroundColorTheme()),
                             ),
                           ),
                         ),
@@ -148,7 +151,7 @@ class OrderItemTile extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       margin: EdgeInsets.only(bottom: 7),
       decoration: BoxDecoration(
-        color: AppColors.darkColor,
+        color: colorController.getBackGroundColorTheme(),
         border: Border.all(color: AppColors.mainColor),
         borderRadius: BorderRadius.circular(15),
       ),
@@ -161,9 +164,15 @@ class OrderItemTile extends StatelessWidget {
                   style: GoogleFonts.montserrat(
                       color: AppColors.darkLighterColor,
                       fontSize: Get.width * 0.035)),
-              Text(product.name.toString().substring(0, 9) + "...",
-                  style: GoogleFonts.montserrat(
-                      color: Colors.white, fontSize: Get.width * 0.04))
+              product.name.length > 9
+                  ? Text(product.name.toString().substring(0, 9) + "...",
+                      style: GoogleFonts.montserrat(
+                          color: colorController.getTextColorTheme(),
+                          fontSize: Get.width * 0.04))
+                  : Text(product.name.toString(),
+                      style: GoogleFonts.montserrat(
+                          color: colorController.getTextColorTheme(),
+                          fontSize: Get.width * 0.04))
             ],
           ),
           /*
@@ -186,7 +195,8 @@ class OrderItemTile extends StatelessWidget {
                       fontSize: Get.width * 0.035)),
               Text(product.quantity.toString(),
                   style: GoogleFonts.montserrat(
-                      color: Colors.white, fontSize: Get.width * 0.04))
+                      color: colorController.getTextColorTheme(),
+                      fontSize: Get.width * 0.04))
             ],
           ),
           GestureDetector(
