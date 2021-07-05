@@ -428,7 +428,7 @@ class InputTile extends StatelessWidget {
           // width: 0.0 produces a thin "hairline" border
           borderSide: const BorderSide(color: Colors.grey, width: 0.0),
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
         errorStyle: GoogleFonts.montserrat(color: AppColors.mainColor),
         hintText: hintText,
         hintStyle: GoogleFonts.montserrat(color: Colors.grey),

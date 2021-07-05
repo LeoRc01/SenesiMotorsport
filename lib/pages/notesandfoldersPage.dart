@@ -4,6 +4,7 @@ import 'package:SenesiMotorsport/main.dart';
 
 import 'package:SenesiMotorsport/pages/enginePage.dart';
 import 'package:SenesiMotorsport/pages/notepage.dart';
+import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
 import 'package:uuid/uuid.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
@@ -153,6 +154,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
         Get.back();
         Get.snackbar("Done!", "Folder created!",
             colorText: colorController.getBackGroundColorTheme());
+        folderNameController.text = "";
         getContentPage(widget.insideOf);
       });
     }).catchError((onError) {
@@ -379,16 +381,36 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                           EdgeInsets.symmetric(horizontal: 20),
                                       itemCount: controller.itemList.length,
                                       itemBuilder: (context, index) {
-                                        return ItemTile(
-                                            controller.itemList[index]
-                                                ["itemId"],
-                                            controller.itemList[index]["title"],
-                                            int.parse(controller.itemList[index]
-                                                ["isFolder"]),
-                                            controller.itemList[index]
-                                                ["content"],
-                                            widget.insideOf,
-                                            controller);
+                                        return TweenAnimationBuilder(
+                                          tween: Tween(end: .0, begin: 1.0),
+                                          duration: Duration(milliseconds: 500),
+                                          curve: Curves.ease,
+                                          builder: (context, value, child) {
+                                            return Transform.translate(
+                                              offset: index % 2 == 0
+                                                  ? Offset(
+                                                      ((-300 + (100 * index)) *
+                                                          value),
+                                                      .0)
+                                                  : Offset(
+                                                      ((300 + (100 * index)) *
+                                                          value),
+                                                      .0),
+                                              child: child,
+                                            );
+                                          },
+                                          child: ItemTile(
+                                              controller.itemList[index]
+                                                  ["itemId"],
+                                              controller.itemList[index]
+                                                  ["title"],
+                                              int.parse(controller
+                                                  .itemList[index]["isFolder"]),
+                                              controller.itemList[index]
+                                                  ["content"],
+                                              widget.insideOf,
+                                              controller),
+                                        );
                                       },
                                       staggeredTileBuilder: (index) =>
                                           StaggeredTile.fit(1)),
@@ -399,83 +421,84 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                       SafeArea(
                           child: Align(
                         alignment: Alignment.bottomCenter,
-                        child: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 30),
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          height: 60,
-                          width: Get.width,
-                          decoration: BoxDecoration(
-                            color: AppColors.mainColor,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  createFolderDialog();
-                                },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.create_new_folder,
-                                      color: colorController
-                                          .getBackGroundColorTheme(),
-                                    ),
-                                    Text("Create Folder",
-                                        style: GoogleFonts.montserrat(
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                          fontSize: Get.width * 0.025,
-                                        )),
-                                  ],
+                        child: CupertinoCard(
+                          color: colorController.getBackGroundColorTheme(),
+                          radius: BorderRadius.circular(50),
+                          margin: EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 20),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            height: 60,
+                            width: Get.width,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    createFolderDialog();
+                                  },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.create_new_folder,
+                                        color:
+                                            colorController.getTextColorTheme(),
+                                      ),
+                                      Text("Create Folder",
+                                          style: GoogleFonts.montserrat(
+                                            color: colorController
+                                                .getTextColorTheme(),
+                                            fontSize: Get.width * 0.025,
+                                          )),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Get.to(() => NotePage.newNote("", "", true,
-                                      widget.insideOf, controller));
-                                },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.note_add,
-                                      color: colorController
-                                          .getBackGroundColorTheme(),
-                                    ),
-                                    Text("Create Note",
-                                        style: GoogleFonts.montserrat(
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                          fontSize: Get.width * 0.025,
-                                        )),
-                                  ],
+                                GestureDetector(
+                                  onTap: () {
+                                    Get.to(() => NotePage.newNote("", "", true,
+                                        widget.insideOf, controller));
+                                  },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.note_add,
+                                        color:
+                                            colorController.getTextColorTheme(),
+                                      ),
+                                      Text("Create Note",
+                                          style: GoogleFonts.montserrat(
+                                            color: colorController
+                                                .getTextColorTheme(),
+                                            fontSize: Get.width * 0.025,
+                                          )),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  showCreateEngineDialog();
-                                },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.add,
-                                      color: colorController
-                                          .getBackGroundColorTheme(),
-                                    ),
-                                    Text("Create Engine",
-                                        style: GoogleFonts.montserrat(
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                          fontSize: Get.width * 0.025,
-                                        )),
-                                  ],
+                                GestureDetector(
+                                  onTap: () {
+                                    showCreateEngineDialog();
+                                  },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        color:
+                                            colorController.getTextColorTheme(),
+                                      ),
+                                      Text("Create Engine",
+                                          style: GoogleFonts.montserrat(
+                                            color: colorController
+                                                .getTextColorTheme(),
+                                            fontSize: Get.width * 0.025,
+                                          )),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ))

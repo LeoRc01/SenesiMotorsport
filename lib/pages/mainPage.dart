@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:SenesiMotorsport/main.dart';
 import 'package:SenesiMotorsport/pages/searchItem.dart';
 import 'package:cupertino_rounded_corners/cupertino_rounded_corners.dart';
@@ -380,16 +381,35 @@ class _MainPageState extends State<MainPage> {
                                       itemCount:
                                           mainPageController.itemList.length,
                                       itemBuilder: (context, index) {
-                                        return new BagTile(
-                                          image: "assets/bag.png",
-                                          title: mainPageController
-                                              .itemList[index]['bagName'],
-                                          desc: mainPageController
-                                              .itemList[index]['description'],
-                                          bagID: mainPageController
-                                              .itemList[index]['bagID'],
-                                          mainPageController:
-                                              mainPageController,
+                                        return TweenAnimationBuilder(
+                                          tween: Tween(begin: 1.0, end: 0.0),
+                                          curve: Curves.ease,
+                                          duration: Duration(milliseconds: 650),
+                                          builder: (context, value, child) {
+                                            return Transform.translate(
+                                              offset: index % 2 == 0
+                                                  ? Offset(
+                                                      ((-300 + (100 * index)) *
+                                                          value),
+                                                      .0)
+                                                  : Offset(
+                                                      ((300 + (100 * index)) *
+                                                          value),
+                                                      .0),
+                                              child: child,
+                                            );
+                                          },
+                                          child: new BagTile(
+                                            image: "assets/bag.png",
+                                            title: mainPageController
+                                                .itemList[index]['bagName'],
+                                            desc: mainPageController
+                                                .itemList[index]['description'],
+                                            bagID: mainPageController
+                                                .itemList[index]['bagID'],
+                                            mainPageController:
+                                                mainPageController,
+                                          ),
                                         );
                                       },
                                       staggeredTileBuilder: (index) =>
@@ -446,8 +466,9 @@ class BagTile extends StatefulWidget {
 class _BagTileState extends State<BagTile> {
   @override
   void initState() {
-    super.initState();
     getBagItems(int.parse(widget.bagID));
+
+    super.initState();
   }
 
   List<dynamic> allItems;
@@ -603,7 +624,7 @@ class _BagTileState extends State<BagTile> {
           color: AppColors.darkColor,
         ),*/
         child: Container(
-          height: 250,
+          height: 230,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,

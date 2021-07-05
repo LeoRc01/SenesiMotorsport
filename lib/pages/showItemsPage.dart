@@ -303,8 +303,22 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
                                       itemCount: showItemsPagecontroller
                                           .itemList.length,
                                       itemBuilder: (context, index) {
-                                        return showItemsPagecontroller
-                                            .itemList[index];
+                                        return TweenAnimationBuilder(
+                                          child: showItemsPagecontroller
+                                              .itemList[index],
+                                          tween: Tween(end: .0, begin: 1.0),
+                                          curve: Curves.ease,
+                                          duration:
+                                              Duration(milliseconds: 1000),
+                                          builder: (context, value, child) {
+                                            return Transform.translate(
+                                                child: child,
+                                                offset: Offset(
+                                                    .0,
+                                                    ((300 + (100 * index)) *
+                                                        value)));
+                                          },
+                                        );
                                       })
                                   : Expanded(
                                       child: Center(

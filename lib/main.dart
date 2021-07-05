@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/route_manager.dart';
 
-Controller colorController = new Controller();
+Controller colorController = new Controller.colorController();
 
 main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,11 +1,28 @@
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Controller extends GetxController {
   /*
   THEME PART
   */
+
+  SharedPreferences prefs;
+
+  Future initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  Controller.colorController() {
+    initPrefs().then((value) {
+      prefs.getString("THEME") == "LIGHT"
+          ? changeToLightTheme()
+          : changeToDarkTheme();
+    });
+  }
+
+  Controller();
 
   var backGroundColorTheme = AppColors.darkColor.obs;
   var textColorTheme = Colors.white.obs;
@@ -15,6 +32,7 @@ class Controller extends GetxController {
   getTextColorTheme() => textColorTheme.value;
 
   changeToLightTheme() {
+    prefs.setString("THEME", "LIGHT");
     Get.changeTheme(ThemeData.light());
     backGroundColorTheme(Colors.white);
     textColorTheme(AppColors.darkColor);
@@ -22,6 +40,7 @@ class Controller extends GetxController {
   }
 
   changeToDarkTheme() {
+    prefs.setString("THEME", "DARK");
     Get.changeTheme(ThemeData.dark());
     textColorTheme(Colors.white);
     backGroundColorTheme(AppColors.darkColor);
