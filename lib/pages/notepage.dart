@@ -20,12 +20,13 @@ class NotePage extends StatefulWidget {
   bool isNew;
   Controller otherPageController;
 
-  NotePage(title, itemId, noteContent, insideOf) {
+  NotePage(title, itemId, noteContent, insideOf, otherPageController) {
     this.title = title;
     this.itemId = itemId;
     this.noteContent = noteContent;
     this.insideOf = insideOf;
     this.isNew = false;
+    this.otherPageController = otherPageController;
     //this.otherPageController = controller;
   }
 
@@ -46,7 +47,6 @@ class _NotePageState extends State<NotePage> {
 
   @override
   void initState() {
-    print(widget.noteContent);
     titleController = new TextEditingController();
     titleController.text = widget.title;
 
@@ -58,6 +58,7 @@ class _NotePageState extends State<NotePage> {
   }
 
   createNote(uuid) async {
+    noteController.setIsLoading();
     var url = UrlApp.url +
         "/createNote.php?title=" +
         titleController.text +
@@ -71,6 +72,7 @@ class _NotePageState extends State<NotePage> {
       //Get.snackbar("Done!", "Note created successfully!");
       insertNoteIntoFolder(widget.insideOf, uuid);
     }).catchError((onError) {
+      noteController.setNotLoadingLoading();
       Get.back();
       Get.snackbar("Error", "No Internet connection.",
           colorText: colorController.getBackGroundColorTheme());
@@ -93,7 +95,9 @@ class _NotePageState extends State<NotePage> {
         "itemId": uuid,
       };
       widget.otherPageController.itemList.add(data);
+
       Get.back();
+      noteController.setNotLoadingLoading();
       //Get.forceAppUpdate();
       //Navigator.pop(context);
       //Navigator.pop(context);
@@ -101,6 +105,7 @@ class _NotePageState extends State<NotePage> {
   }
 
   updateNote(uuid) async {
+    noteController.setIsLoading();
     var url = UrlApp.url +
         "/updateNote.php?title=" +
         titleController.text +
@@ -111,12 +116,18 @@ class _NotePageState extends State<NotePage> {
         "&email=" +
         UserEmail.userEmail;
     Response response = await http.get(url).then((value) {
-      print(widget.title);
-      print(widget.itemId);
-      Navigator.pop(context);
-      Navigator.pop(context);
-    }).catchError((onError) {
+      widget.otherPageController.itemList
+          .where((element) => element["itemId"] == widget.itemId)
+          .forEach((element) {
+        element["title"] = titleController.text;
+        element["content"] = contentController.text;
+      });
+      noteController.setNotLoadingLoading();
       Get.back();
+    }).catchError((onError) {
+      noteController.setNotLoadingLoading();
+      Get.back();
+      print(onError);
       Get.snackbar("Error", "No Internet connection.",
           colorText: colorController.getBackGroundColorTheme());
     });
@@ -134,103 +145,109 @@ class _NotePageState extends State<NotePage> {
           image: DecorationImage(
               image: AssetImage("assets/bg.jpg"), fit: BoxFit.cover),
         ),
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              child: Row(
+        child: noteController.getLoading()
+            ? Expanded(
+                child: Center(
+                child: CircularProgressIndicator(),
+              ))
+            : Column(
                 children: [
                   Container(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                        icon: FaIcon(
-                          FontAwesomeIcons.chevronLeft,
-                          color: AppColors.darkColor,
-                        ),
-                        onPressed: () {
-                          Get.back();
-                        }),
-                  ),
-                  Spacer(),
-                  Obx(
-                    () => noteController.getModified()
-                        ? IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.check,
-                              color: AppColors.darkColor,
-                            ),
-                            onPressed: () {
-                              if (contentController.text == "" &&
-                                  titleController.text == "" &&
-                                  widget.isNew) {
+                    margin: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top),
+                    child: Row(
+                      children: [
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                              icon: FaIcon(
+                                FontAwesomeIcons.chevronLeft,
+                                color: AppColors.darkColor,
+                              ),
+                              onPressed: () {
                                 Get.back();
-                              } else if (widget.isNew) {
-                                //DONE: CREATE NOTE
-                                //RICORDARSI DI CREARE ID USANDO UUID.v1
-                                String suuid = uuid.v1();
-                                createNote(suuid);
-                              } else {
-                                //DONE: UPDATE NOTE
-                                updateNote(widget.itemId);
-                              }
-                            })
-                        : Container(),
-                  )
+                              }),
+                        ),
+                        Spacer(),
+                        Obx(
+                          () => noteController.getModified()
+                              ? IconButton(
+                                  icon: FaIcon(
+                                    FontAwesomeIcons.check,
+                                    color: AppColors.darkColor,
+                                  ),
+                                  onPressed: () {
+                                    if (contentController.text == "" &&
+                                        titleController.text == "" &&
+                                        widget.isNew) {
+                                      Get.back();
+                                    } else if (widget.isNew) {
+                                      //DONE: CREATE NOTE
+                                      //RICORDARSI DI CREARE ID USANDO UUID.v1
+                                      String suuid = uuid.v1();
+                                      createNote(suuid);
+                                    } else {
+                                      //DONE: UPDATE NOTE
+                                      updateNote(widget.itemId);
+                                    }
+                                  })
+                              : Container(),
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.darkColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      onChanged: (value) {
+                        noteController.setModified(true);
+                      },
+                      controller: titleController,
+                      decoration: InputDecoration(
+                          hintText: "Title",
+                          hintStyle: GoogleFonts.montserrat(
+                              fontSize: Get.width * 0.07,
+                              fontWeight: FontWeight.w500),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 10),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      style: GoogleFonts.montserrat(
+                          color: Colors.white,
+                          fontSize: Get.width * 0.07,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  SizedBox(
+                    height: Get.height * 0.01,
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.darkColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      onChanged: (value) {
+                        noteController.setModified(true);
+                      },
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 27,
+                      controller: contentController,
+                      decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 10),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                onChanged: (value) {
-                  noteController.setModified(true);
-                },
-                controller: titleController,
-                decoration: InputDecoration(
-                    hintText: "Title",
-                    hintStyle: GoogleFonts.montserrat(
-                        fontSize: Get.width * 0.07,
-                        fontWeight: FontWeight.w500),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: Get.width * 0.07,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-            SizedBox(
-              height: Get.height * 0.01,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                onChanged: (value) {
-                  noteController.setModified(true);
-                },
-                keyboardType: TextInputType.multiline,
-                maxLines: 27,
-                controller: contentController,
-                decoration: InputDecoration(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                style: GoogleFonts.montserrat(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

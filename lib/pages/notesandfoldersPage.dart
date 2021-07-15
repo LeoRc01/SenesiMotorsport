@@ -248,70 +248,6 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-/*
-      //Init Floating Action Bubble
-      floatingActionButton: FloatingActionBubble(
-        // Menu items
-        items: <Bubble>[
-          // Floating action menu item
-          Bubble(
-            title: "Create Folder",
-            iconColor: colorController.getBackGroundColorTheme(),
-            bubbleColor: AppColors.mainColor,
-            icon: Icons.folder,
-            titleStyle: TextStyle(
-                fontSize: 16, color: colorController.getBackGroundColorTheme()),
-            onPress: () {
-              createFolderDialog();
-              //_animationController.reverse();
-            },
-          ),
-          // Floating action menu item
-          Bubble(
-            title: "Create Note",
-            iconColor: colorController.getBackGroundColorTheme(),
-            bubbleColor: AppColors.mainColor,
-            icon: Icons.note_add,
-            titleStyle: TextStyle(
-                fontSize: 16, color: colorController.getBackGroundColorTheme()),
-            onPress: () {
-              Get.to(() =>
-                  NotePage.newNote("", "", true, widget.insideOf, controller));
-            },
-          ),
-          // Floating action menu item
-          Bubble(
-            title: "Create Engine",
-            iconColor: colorController.getBackGroundColorTheme(),
-            bubbleColor: AppColors.mainColor,
-            icon: Icons.add,
-            titleStyle: TextStyle(
-                fontSize: 16, color: colorController.getBackGroundColorTheme()),
-            onPress: () {
-              showCreateEngineDialog();
-            },
-          ),
-        ],
-
-        // animation controller
-        animation: _animation,
-
-        // On pressed change animation state
-        onPress: () {
-          if (!isOpen) {
-            _animationController.forward();
-          } else {
-            _animationController.reverse();
-          }
-          isOpen = !isOpen;
-        },
-        // Floating Action button Icon color
-        iconColor: AppColors.mainColor,
-
-        // Flaoting Action button Icon
-        icon: AnimatedIcons.menu_arrow,
-      ),
-      */
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -373,10 +309,10 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                 )
                               : Expanded(
                                   child: StaggeredGridView.countBuilder(
-                                      crossAxisCount: 2,
+                                      crossAxisCount: 3,
                                       shrinkWrap: true,
                                       crossAxisSpacing: 16,
-                                      mainAxisSpacing: 16,
+                                      mainAxisSpacing: 10,
                                       padding:
                                           EdgeInsets.symmetric(horizontal: 20),
                                       itemCount: controller.itemList.length,
@@ -387,15 +323,10 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                           curve: Curves.ease,
                                           builder: (context, value, child) {
                                             return Transform.translate(
-                                              offset: index % 2 == 0
-                                                  ? Offset(
-                                                      ((-300 + (100 * index)) *
-                                                          value),
-                                                      .0)
-                                                  : Offset(
-                                                      ((300 + (100 * index)) *
-                                                          value),
-                                                      .0),
+                                              offset: Offset(
+                                                  .0,
+                                                  ((300 + (100 * index)) *
+                                                      value)),
                                               child: child,
                                             );
                                           },
@@ -604,7 +535,8 @@ class ItemTile extends StatelessWidget {
                   insideOf: insideOf,
                   name: itemNameController.text));
             } else {
-              Get.to(() => NotePage(title, itemId, noteContent, insideOf));
+              Get.to(() =>
+                  NotePage(title, itemId, noteContent, insideOf, controller));
             }
           },
           onLongPress: () {
@@ -634,8 +566,10 @@ class ItemTile extends StatelessWidget {
             );
           },
           child: Container(
-            height: 180,
-            padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+            height: 120,
+            padding: EdgeInsets.symmetric(
+              vertical: 20,
+            ),
             child: Image(
               image: isFolder == 1
                   ? AssetImage("assets/folder.png")
@@ -656,7 +590,7 @@ class ItemTile extends StatelessWidget {
               if (itemNameController.text.length <= 20) {
                 title = itemNameController.text;
                 updateItemTitle(itemId);
-                Get.back();
+                //Get.back();
                 FocusScope.of(context).unfocus();
                 print(itemNameController.text);
               } else {
@@ -668,9 +602,8 @@ class ItemTile extends StatelessWidget {
             style: GoogleFonts.montserrat(
                 color: colorController.getTextColorTheme()),
             textAlign: TextAlign.center,
-            textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
             ),

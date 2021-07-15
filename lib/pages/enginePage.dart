@@ -807,10 +807,11 @@ class EnginePage extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: SafeArea(
               child: enginePageController.getLoading()
-                  ? Expanded(
+                  ? Container(
                       child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                          child: Text("Loading...",
+                              style: GoogleFonts.montserrat(
+                                  color: colorController.getTextColorTheme()))),
                     )
                   : Form(
                       child: Column(

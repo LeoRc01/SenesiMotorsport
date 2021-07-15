@@ -451,7 +451,7 @@ class _ItemState extends State<Item> {
           ),
         ],
         child: Container(
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 7),
           padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
           width: Get.width,
           height: 100,
@@ -482,43 +482,45 @@ class _ItemState extends State<Item> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.minus,
-                              color: colorController.getTextColorTheme(),
-                              size: Get.width * 0.03,
-                            ),
-                            onPressed: () {
-                              if (!click) {
-                                if (widget.quantity > 0) {
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                              icon: FaIcon(
+                                FontAwesomeIcons.minus,
+                                color: colorController.getTextColorTheme(),
+                                size: Get.width * 0.03,
+                              ),
+                              onPressed: () {
+                                if (!click) {
+                                  if (widget.quantity > 0) {
+                                    setState(() {
+                                      widget.quantity--;
+                                    });
+                                  }
+                                }
+                              }),
+                          Text(
+                            widget.quantity.toString(),
+                            style: GoogleFonts.montserrat(
+                                color: colorController.getTextColorTheme()),
+                          ),
+                          IconButton(
+                              icon: FaIcon(
+                                FontAwesomeIcons.plus,
+                                color: colorController.getTextColorTheme(),
+                                size: Get.width * 0.03,
+                              ),
+                              onPressed: () {
+                                if (!click) {
                                   setState(() {
-                                    widget.quantity--;
+                                    widget.quantity++;
                                   });
                                 }
-                              }
-                            }),
-                        Text(
-                          widget.quantity.toString(),
-                          style: GoogleFonts.montserrat(
-                              color: colorController.getTextColorTheme()),
-                        ),
-                        IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.plus,
-                              color: colorController.getTextColorTheme(),
-                              size: Get.width * 0.03,
-                            ),
-                            onPressed: () {
-                              if (!click) {
-                                setState(() {
-                                  widget.quantity++;
-                                });
-                              }
-                            }),
-                      ],
+                              }),
+                        ],
+                      ),
                     ),
                     (initQuantity != widget.quantity && !click)
                         ? GestureDetector(
@@ -529,8 +531,9 @@ class _ItemState extends State<Item> {
                             },
                             child: Container(
                               //width: Get.width * 0.2,
+                              margin: EdgeInsets.symmetric(horizontal: 15),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.mainColor,
                                 borderRadius: BorderRadius.circular(40),
                               ),
                               padding: EdgeInsets.symmetric(
@@ -539,7 +542,7 @@ class _ItemState extends State<Item> {
                                 child: Text(
                                   "Update",
                                   style: GoogleFonts.montserrat(
-                                      color: Colors.black),
+                                      color: Colors.white),
                                 ),
                               ),
                             ),

@@ -24,6 +24,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:slide_drawer/slide_drawer.dart';
 import 'package:http/http.dart' as http;
 
 class MainPage extends StatefulWidget {
@@ -283,13 +284,14 @@ class _MainPageState extends State<MainPage> {
                               Container(
                                 child: IconButton(
                                     icon: FaIcon(
-                                      FontAwesomeIcons.signOutAlt,
+                                      FontAwesomeIcons.bars,
                                       color: colorController
                                           .getBackGroundColorTheme(),
                                     ),
                                     onPressed: () {
-                                      woocommerce.logUserOut();
-                                      Get.off(() => LoginPage());
+                                      //woocommerce.logUserOut();
+                                      //Get.off(() => LoginPage());
+                                      SlideDrawer.of(context).toggle();
                                     }),
                               ),
                               Container(
@@ -312,6 +314,7 @@ class _MainPageState extends State<MainPage> {
                                               : colorController
                                                   .changeToDarkTheme();
                                         }),
+                                    /*
                                     IconButton(
                                         icon: FaIcon(
                                           FontAwesomeIcons.search,
@@ -341,6 +344,7 @@ class _MainPageState extends State<MainPage> {
                                         onPressed: () {
                                           Get.to(() => YourOrders());
                                         }),
+                                  
                                     IconButton(
                                         icon: FaIcon(
                                           FontAwesomeIcons.stickyNote,
@@ -351,6 +355,7 @@ class _MainPageState extends State<MainPage> {
                                           Get.to(() => NoteAndFolders(
                                               "mainpage", "Your folders"));
                                         }),
+                                    */
                                   ],
                                 ),
                               ),
@@ -733,7 +738,7 @@ class Item extends StatelessWidget {
           ),
         ],
         child: Container(
-          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 7),
           padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
           width: Get.width,
           height: 100,
@@ -766,103 +771,105 @@ class Item extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.minus,
-                              color: colorController.getTextColorTheme(),
-                              size: Get.width * 0.03,
-                            ),
-                            onPressed: () {
-                              controller.decrementQuantity();
-                              if (quantity > 0) quantity--;
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                              icon: FaIcon(
+                                FontAwesomeIcons.minus,
+                                color: colorController.getTextColorTheme(),
+                                size: Get.width * 0.03,
+                              ),
+                              onPressed: () {
+                                controller.decrementQuantity();
+                                if (quantity > 0) quantity--;
 
-                              if (controller.getQuantity() == 0) {
-                                Get.defaultDialog(
-                                    backgroundColor: colorController
-                                        .getBackGroundColorTheme(),
-                                    titleStyle: GoogleFonts.montserrat(
-                                      color:
-                                          colorController.getTextColorTheme(),
-                                    ),
-                                    title: "Do you want to buy new products?",
-                                    content: Container(),
-                                    actions: [
-                                      GestureDetector(
-                                        onTap: () => Get.back(),
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 20, vertical: 10),
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.red),
-                                          child: Text(
-                                            "No",
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600),
+                                if (controller.getQuantity() == 0) {
+                                  Get.defaultDialog(
+                                      backgroundColor: colorController
+                                          .getBackGroundColorTheme(),
+                                      titleStyle: GoogleFonts.montserrat(
+                                        color:
+                                            colorController.getTextColorTheme(),
+                                      ),
+                                      title: "Do you want to buy new products?",
+                                      content: Container(),
+                                      actions: [
+                                        GestureDetector(
+                                          onTap: () => Get.back(),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 20, vertical: 10),
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.red),
+                                            child: Text(
+                                              "No",
+                                              style: GoogleFonts.montserrat(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () async {
-                                          const _url =
-                                              'https://senesimotorsport.com/';
+                                        GestureDetector(
+                                          onTap: () async {
+                                            const _url =
+                                                'https://senesimotorsport.com/';
 
-                                          await canLaunch(_url)
-                                              ? await launch(_url)
-                                              : throw 'Could not launch $_url';
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 20, vertical: 10),
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: AppColors.mainColor),
-                                          child: Text(
-                                            "Yes",
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600),
+                                            await canLaunch(_url)
+                                                ? await launch(_url)
+                                                : throw 'Could not launch $_url';
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 20, vertical: 10),
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: AppColors.mainColor),
+                                            child: Text(
+                                              "Yes",
+                                              style: GoogleFonts.montserrat(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ]);
-                              }
-                              if (controller.getQuantity() == quantity) {
-                                controller.setToNotChanged();
-                              } else {
-                                controller.setToChanged();
-                              }
-                            }),
-                        Obx(
-                          () => Text(
-                            controller.quantity.toString(),
-                            style: GoogleFonts.montserrat(
-                              color: colorController.getTextColorTheme(),
+                                      ]);
+                                }
+                                if (controller.getQuantity() == quantity) {
+                                  controller.setToNotChanged();
+                                } else {
+                                  controller.setToChanged();
+                                }
+                              }),
+                          Obx(
+                            () => Text(
+                              controller.quantity.toString(),
+                              style: GoogleFonts.montserrat(
+                                color: colorController.getTextColorTheme(),
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.plus,
-                              color: colorController.getTextColorTheme(),
-                              size: Get.width * 0.03,
-                            ),
-                            onPressed: () {
-                              controller.incrementQuantity();
-                              quantity++;
-                              if (controller.getQuantity() == quantity) {
-                                controller.setToNotChanged();
-                              } else {
-                                controller.setToChanged();
-                              }
-                            }),
-                      ],
+                          IconButton(
+                              icon: FaIcon(
+                                FontAwesomeIcons.plus,
+                                color: colorController.getTextColorTheme(),
+                                size: Get.width * 0.03,
+                              ),
+                              onPressed: () {
+                                controller.incrementQuantity();
+                                quantity++;
+                                if (controller.getQuantity() == quantity) {
+                                  controller.setToNotChanged();
+                                } else {
+                                  controller.setToChanged();
+                                }
+                              }),
+                        ],
+                      ),
                     ),
                     Obx(
                       () => controller.getChanged()
@@ -908,21 +915,20 @@ class Item extends StatelessWidget {
                                   });
                                 }
                               },
-                              child: Expanded(
-                                child: Container(
-                                  alignment: Alignment.centerLeft,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.mainColor,
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 15),
-                                  child: Center(
-                                    child: Text(
-                                      "Update",
-                                      style: GoogleFonts.montserrat(
-                                          color: Colors.white),
-                                    ),
+                              child: Container(
+                                //alignment: Alignment.centerLeft,
+                                margin: EdgeInsets.symmetric(horizontal: 15),
+                                decoration: BoxDecoration(
+                                  color: AppColors.mainColor,
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 15),
+                                child: Center(
+                                  child: Text(
+                                    "Update",
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.white),
                                   ),
                                 ),
                               ),
