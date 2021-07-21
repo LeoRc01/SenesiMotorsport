@@ -1,0 +1,31 @@
+{
+  "name": "search_choices",
+  "version": "0.0.1",
+  "summary": "Widget to let the user search through a string typed on a customizable keyboard in a single or multiple choices list presented as a dropdown",
+  "description": "Widget to let the user search through a string typed on a customizable keyboard in a single or multiple choices list presented as a dropdown",
+  "homepage": "https://github.com/lcuis/search_choices",
+  "license": {
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "jod.li": "flutter@jod.li"
+  },
+  "source": {
+    "path": "."
+  },
+  "source_files": "Classes/**/*",
+  "dependencies": {
+    "Flutter": [
+
+    ]
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "VALID_ARCHS[sdk=iphonesimulator*]": "x86_64"
+  },
+  "swift_versions": "5.0",
+  "swift_version": "5.0"
+}
