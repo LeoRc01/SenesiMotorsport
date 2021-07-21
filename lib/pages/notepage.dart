@@ -104,7 +104,7 @@ class _NotePageState extends State<NotePage> {
     });
   }
 
-  updateNote(uuid) async {
+  updateNote(uuid, {onDispose = false}) async {
     noteController.setIsLoading();
     var url = UrlApp.url +
         "/updateNote.php?title=" +
@@ -123,7 +123,7 @@ class _NotePageState extends State<NotePage> {
         element["content"] = contentController.text;
       });
       noteController.setNotLoadingLoading();
-      Get.back();
+      if (!onDispose) Get.back();
     }).catchError((onError) {
       noteController.setNotLoadingLoading();
       Get.back();

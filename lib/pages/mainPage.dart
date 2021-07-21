@@ -70,19 +70,28 @@ class _MainPageState extends State<MainPage> {
   }
 
   getAllBags() async {
-    mainPageController.itemList
-        .removeRange(0, mainPageController.itemList.length);
-    mainPageController.setIsLoading();
-    var url = UrlApp.url + "/showAllBags.php?email=" + UserEmail.userEmail;
-    Response res = await http.get(url).then((value) {
-      mainPageController.itemList = jsonDecode(value.body);
-      print(mainPageController.itemList);
-      mainPageController.setNotLoadingLoading();
-    }).catchError((error) {
-      Get.snackbar("Error", "No Internet",
-          colorText: colorController.getBackGroundColorTheme());
-      mainPageController.setNotLoadingLoading();
-    });
+    if (UserEmail.userEmail != null) {
+      mainPageController.itemList
+          .removeRange(0, mainPageController.itemList.length);
+      mainPageController.setIsLoading();
+      var url = UrlApp.url + "/showAllBags.php?email=" + UserEmail.userEmail;
+      Response res = await http.get(url).then((value) {
+        mainPageController.itemList = jsonDecode(value.body);
+        print(mainPageController.itemList);
+        mainPageController.setNotLoadingLoading();
+      }).timeout(
+        Duration(seconds: 5),
+        onTimeout: () {
+          Get.offAll(() => LoginPage());
+        },
+      ).catchError((error) {
+        Get.snackbar("Error", "No Internet",
+            colorText: colorController.getBackGroundColorTheme());
+        mainPageController.setNotLoadingLoading();
+      });
+    } else {
+      Get.offAll(() => LoginPage());
+    }
   }
 
   final createBagKey = GlobalKey<FormState>();
@@ -91,6 +100,84 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Obx(
       () => Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          iconTheme:
+              IconThemeData(color: colorController.getBackGroundColorTheme()),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            IconButton(
+                icon: FaIcon(
+                  colorController.isDarkTheme.value
+                      ? FontAwesomeIcons.sun
+                      : FontAwesomeIcons.moon,
+                  color: colorController.getBackGroundColorTheme(),
+                ),
+                onPressed: () {
+                  print(colorController.isDarkTheme.value);
+                  colorController.isDarkTheme.value
+                      ? colorController.changeToLightTheme()
+                      : colorController.changeToDarkTheme();
+                }),
+          ],
+        ),
+        drawer: Drawer(
+          elevation: 0,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                  child: Image.asset(
+                    "assets/senesi-motorsport-logo.png",
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    image: DecorationImage(
+                        image: AssetImage(
+                          "assets/grafica.jpg",
+                        ),
+                        fit: BoxFit.cover),
+                  )),
+              ListTile(
+                  title: Text('Search Item'),
+                  leading: FaIcon(FontAwesomeIcons.search),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => SearchItemPage());
+                  }),
+              ListTile(
+                  title: Text('Your Items'),
+                  leading: FaIcon(FontAwesomeIcons.listAlt),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => ShowItemsPage.comingFromPage(true));
+                  }),
+              ListTile(
+                  title: Text('Your orders'),
+                  leading: FaIcon(FontAwesomeIcons.user),
+                  onTap: () {
+                    Get.back();
+                    Get.to(() => YourOrders());
+                  }),
+              ListTile(
+                  title: Text('Notes'),
+                  leading: FaIcon(FontAwesomeIcons.stickyNote),
+                  onTap: () {
+                    Get.back();
+                    Get.to(
+                        () => NoteAndFolders("mainpage", "Your folders", ""));
+                  }),
+              ListTile(
+                  title: Text('Log out'),
+                  leading: FaIcon(FontAwesomeIcons.signOutAlt),
+                  onTap: () {
+                    woocommerce.logUserOut();
+                    Get.off(() => LoginPage());
+                  }),
+            ],
+          ),
+        ),
         resizeToAvoidBottomInset: false,
         floatingActionButton: FloatingActionButton(
           onPressed: () {
@@ -274,101 +361,13 @@ class _MainPageState extends State<MainPage> {
                     )
                   : Column(
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          margin: EdgeInsets.only(
-                              top: MediaQuery.of(context).padding.top),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: IconButton(
-                                    icon: FaIcon(
-                                      FontAwesomeIcons.bars,
-                                      color: colorController
-                                          .getBackGroundColorTheme(),
-                                    ),
-                                    onPressed: () {
-                                      //woocommerce.logUserOut();
-                                      //Get.off(() => LoginPage());
-                                      SlideDrawer.of(context).toggle();
-                                    }),
-                              ),
-                              Container(
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                        icon: FaIcon(
-                                          colorController.isDarkTheme.value
-                                              ? FontAwesomeIcons.sun
-                                              : FontAwesomeIcons.moon,
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                        ),
-                                        onPressed: () {
-                                          print(colorController
-                                              .isDarkTheme.value);
-                                          colorController.isDarkTheme.value
-                                              ? colorController
-                                                  .changeToLightTheme()
-                                              : colorController
-                                                  .changeToDarkTheme();
-                                        }),
-                                    /*
-                                    IconButton(
-                                        icon: FaIcon(
-                                          FontAwesomeIcons.search,
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                        ),
-                                        onPressed: () {
-                                          Get.to(() => SearchItemPage());
-                                        }),
-                                    IconButton(
-                                        icon: FaIcon(
-                                          FontAwesomeIcons.listAlt,
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                        ),
-                                        onPressed: () {
-                                          Get.to(() =>
-                                              ShowItemsPage.comingFromPage(
-                                                  true));
-                                        }),
-                                    IconButton(
-                                        icon: FaIcon(
-                                          FontAwesomeIcons.user,
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                        ),
-                                        onPressed: () {
-                                          Get.to(() => YourOrders());
-                                        }),
-                                  
-                                    IconButton(
-                                        icon: FaIcon(
-                                          FontAwesomeIcons.stickyNote,
-                                          color: colorController
-                                              .getBackGroundColorTheme(),
-                                        ),
-                                        onPressed: () {
-                                          Get.to(() => NoteAndFolders(
-                                              "mainpage", "Your folders"));
-                                        }),
-                                    */
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                         mainPageController.itemList.length == 0
                             ? Expanded(
                                 child: Center(
                                   child: Text("No items available.",
                                       style: GoogleFonts.montserrat(
-                                        color:
-                                            colorController.getTextColorTheme(),
+                                        color: colorController
+                                            .getBackGroundColorTheme(),
                                         fontSize: Get.width * 0.05,
                                       )),
                                 ),
@@ -877,6 +876,9 @@ class Item extends StatelessWidget {
                               onTap: () async {
                                 if (controller.getQuantity() == 0) {
                                   //DONE: Delete Item
+                                  controller.setToNotChanged();
+                                  Get.back();
+                                  /*
                                   var url = UrlApp.url +
                                       "/deleteItem.php?itemId=" +
                                       itemID.toString();
@@ -893,7 +895,7 @@ class Item extends StatelessWidget {
                                     Get.snackbar("Error", error.toString(),
                                         colorText: colorController
                                             .getBackGroundColorTheme());
-                                  });
+                                  });*/
                                 } else {
                                   var url = UrlApp.url +
                                       "/updateItemQuantity.php?itemId=" +

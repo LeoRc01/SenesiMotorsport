@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/main.dart';
+import 'package:SenesiMotorsport/models/animated_arrow_down.dart';
+import 'package:SenesiMotorsport/models/sidepanel.dart';
 
 import 'package:SenesiMotorsport/pages/enginePage.dart';
 import 'package:SenesiMotorsport/pages/notepage.dart';
@@ -21,8 +23,12 @@ import 'package:http/http.dart' as http;
 class NoteAndFolders extends StatefulWidget {
   String insideOf;
   String title;
+  Controller oldPageController;
+  String comingFromPage_insideOf;
 
-  NoteAndFolders(insideOf, title) {
+  NoteAndFolders(insideOf, title, this.comingFromPage_insideOf,
+      {this.oldPageController}) {
+    if (oldPageController != null) print(oldPageController.itemList);
     this.insideOf = insideOf;
     this.title = title;
   }
@@ -72,7 +78,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
           UserEmail.userEmail;
       Response response = await http.get(url).then((value) {
         controller.itemList = jsonDecode(value.body);
-        print(controller.itemList);
+
         controller.setNotLoadingLoading();
         //print(contentPage);
       }).catchError((onError) {
@@ -103,7 +109,6 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
       buttonColor: AppColors.mainColor,
       cancelTextColor: AppColors.mainColor,
       onConfirm: () {
-        print("sus");
         if (folderKeyForm.currentState.validate()) {
           createFolder(folderNameController.text.trim());
         }
@@ -196,7 +201,24 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
         itemId +
         "&email=" +
         UserEmail.userEmail;
-    Response response = await http.get(url).then((value) {});
+
+    Response response = await http.get(url).then((value) {
+      print(value.body);
+    });
+  }
+
+  Future insertItemIntoFolder(insideOf, itemId) async {
+    var url = UrlApp.url +
+        "/insertItemIntoFolder.php?insideOf=" +
+        insideOf +
+        "&itemId=" +
+        itemId +
+        "&email=" +
+        UserEmail.userEmail;
+
+    Response response = await http.get(url).then((value) {
+      print(value.body);
+    });
   }
 
   final _key = GlobalKey<FormState>();
@@ -243,6 +265,22 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
         ));
   }
 
+  Future removeItemFromCurrentFolder(String insideOf, String noteId) async {
+    controller.itemList.removeWhere((element) => element["itemId"] == noteId);
+    Get.forceAppUpdate();
+    var url = UrlApp.url +
+        "/removeItemFromFolder.php?insideOf=" +
+        insideOf +
+        "&itemId=" +
+        noteId +
+        "&email=" +
+        UserEmail.userEmail;
+
+    Response response = await http.get(url).then((value) {
+      print(value.body);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -263,6 +301,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                     child: CircularProgressIndicator(),
                   )
                 : Stack(
+                    alignment: Alignment.center,
                     children: [
                       Column(
                         children: [
@@ -293,6 +332,49 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                       fontSize: Get.width * 0.07,
                                       fontWeight: FontWeight.w500),
                                 ),
+                                Spacer(),
+                                widget.insideOf != "mainpage"
+                                    ? DragTarget(
+                                        onAccept: (data) {
+                                          String insideOf =
+                                              widget.comingFromPage_insideOf;
+                                          String noteId = data.itemId;
+
+                                          insertItemIntoFolder(insideOf, noteId)
+                                              .then((value) {
+                                            Map<String, dynamic> droppedItem = {
+                                              "title": data.title,
+                                              "content": data.noteContent,
+                                              "isFolder":
+                                                  data.isFolder.toString(),
+                                              "itemId": data.itemId,
+                                            };
+                                            widget.oldPageController.itemList
+                                                .add(droppedItem);
+
+                                            removeItemFromCurrentFolder(
+                                                widget.insideOf, noteId);
+                                            Get.back();
+                                            return true;
+                                          });
+
+                                          return false;
+                                        },
+                                        builder: (context, candidateData,
+                                            rejectedData) {
+                                          return Obx(
+                                            () => Opacity(
+                                              opacity: controller.isMoving.value
+                                                  ? 1
+                                                  : 0,
+                                              child: FaIcon(
+                                                  FontAwesomeIcons.backward,
+                                                  color: Colors.red),
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : Container()
                               ],
                             ),
                           ),
@@ -313,6 +395,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                       shrinkWrap: true,
                                       crossAxisSpacing: 16,
                                       mainAxisSpacing: 10,
+                                      //physics: NeverScrollableScrollPhysics(),
                                       padding:
                                           EdgeInsets.symmetric(horizontal: 20),
                                       itemCount: controller.itemList.length,
@@ -330,17 +413,80 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                                               child: child,
                                             );
                                           },
-                                          child: ItemTile(
-                                              controller.itemList[index]
-                                                  ["itemId"],
-                                              controller.itemList[index]
-                                                  ["title"],
-                                              int.parse(controller
-                                                  .itemList[index]["isFolder"]),
-                                              controller.itemList[index]
-                                                  ["content"],
-                                              widget.insideOf,
-                                              controller),
+                                          child: int.parse(
+                                                      controller.itemList[index]
+                                                          ["isFolder"]) ==
+                                                  1
+                                              ? DragTarget(
+                                                  onAccept: (data) {
+                                                    String insideOf = controller
+                                                            .itemList[index]
+                                                        ["itemId"];
+                                                    String noteId = data.itemId;
+
+                                                    insertItemIntoFolder(
+                                                            insideOf, noteId)
+                                                        .then((value) {
+                                                      removeItemFromCurrentFolder(
+                                                          widget.insideOf,
+                                                          noteId);
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              NoteAndFolders(
+                                                                  insideOf,
+                                                                  controller.itemList[
+                                                                          index]
+                                                                      ["title"],
+                                                                  widget
+                                                                      .insideOf,
+                                                                  oldPageController:
+                                                                      controller),
+                                                        ),
+                                                      );
+                                                      return true;
+                                                    });
+
+                                                    return false;
+                                                  },
+                                                  builder: (context,
+                                                      candidateData,
+                                                      rejectedData) {
+                                                    return ItemTile(
+                                                        controller
+                                                                .itemList[index]
+                                                            ["itemId"],
+                                                        controller
+                                                                .itemList[index]
+                                                            ["title"],
+                                                        int.parse(controller
+                                                                .itemList[index]
+                                                            ["isFolder"]),
+                                                        controller
+                                                                .itemList[index]
+                                                            ["content"],
+                                                        widget.insideOf,
+                                                        controller,
+                                                        widget.title,
+                                                        opacity: candidateData
+                                                            .isNotEmpty);
+                                                  },
+                                                )
+                                              : ItemTile(
+                                                  controller.itemList[index]
+                                                      ["itemId"],
+                                                  controller.itemList[index]
+                                                      ["title"],
+                                                  int.parse(
+                                                      controller.itemList[index]
+                                                          ["isFolder"]),
+                                                  controller.itemList[index]
+                                                      ["content"],
+                                                  widget.insideOf,
+                                                  controller,
+                                                  widget.title,
+                                                ),
                                         );
                                       },
                                       staggeredTileBuilder: (index) =>
@@ -349,6 +495,7 @@ class _NoteAndFoldersState extends State<NoteAndFolders>
                         ],
                       ),
                       /**BOTTOM BUTTON BAR */
+
                       SafeArea(
                           child: Align(
                         alignment: Alignment.bottomCenter,
@@ -449,13 +596,27 @@ class ItemTile extends StatelessWidget {
   int isFolder;
   String noteContent;
   Controller controller;
+  String pageTitle;
+  bool opacity;
+
+  Controller thisItemController;
 
   String setTitle = "";
 
   TextEditingController itemNameController;
 
-  ItemTile(itemId, title, isFolder, noteContent, insideOf, controller) {
-    itemNameController = new TextEditingController();
+  ItemTile(
+    itemId,
+    title,
+    isFolder,
+    noteContent,
+    insideOf,
+    controller,
+    this.pageTitle, {
+    this.opacity = false,
+  }) {
+    thisItemController = new Controller();
+    itemNameController = TextEditingController();
     itemNameController.text = title;
     this.noteContent = noteContent;
     this.itemId = itemId;
@@ -472,10 +633,8 @@ class ItemTile extends StatelessWidget {
         uuid +
         "&email=" +
         UserEmail.userEmail;
-    //∂print(uuid);
-    Response response = await http.get(url).then((value) {
-      print(value.body);
-    }).catchError((onError) {
+    Response response =
+        await http.get(url).then((value) {}).catchError((onError) {
       Get.back();
       Get.snackbar("Error", "No Internet connection.",
           colorText: colorController.getBackGroundColorTheme());
@@ -518,99 +677,178 @@ class ItemTile extends StatelessWidget {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            if (isFolder == 1) {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => NoteAndFolders(itemId, title)));
-            } else if (isFolder == 2) {
-              Get.to(() => EnginePage(
-                  engineId: itemId,
-                  insideOf: insideOf,
-                  name: itemNameController.text));
-            } else {
-              Get.to(() =>
-                  NotePage(title, itemId, noteContent, insideOf, controller));
-            }
-          },
-          onLongPress: () {
-            Get.defaultDialog(
-              content: Text("Are you sure you want to delete this item?",
-                  style: GoogleFonts.montserrat(
-                      color: colorController.getTextColorTheme())),
-              backgroundColor: colorController.getBackGroundColorTheme(),
-              title: "Delete this item?",
-              textConfirm: "Yes",
-              confirmTextColor: Colors.white,
-              cancelTextColor: AppColors.mainColor,
-              buttonColor: AppColors.mainColor,
-              textCancel: "No",
-              titleStyle: GoogleFonts.montserrat(
-                  color: colorController.getTextColorTheme()),
-              onConfirm: () {
-                if (isFolder == 2) {
-                  print("Engine deleting");
-                  deleteEngine(itemId);
-                }
+  updateEngineName(uuid, String newName) async {
+    var url = UrlApp.url +
+        "/updateEngineName.php?engineId=" +
+        uuid +
+        "&newName=" +
+        newName;
+    Response response = await http.get(url).then((value) {
+      print("BODY: " + value.body);
 
-                deleteItem(itemId);
+      //Get.back();
+    }).catchError((onError) {
+      Get.back();
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
 
-                Get.back();
-              },
-            );
-          },
-          child: Container(
+  Widget _buildTile(context) {
+    return Opacity(
+      opacity: thisItemController.isMoving.value ? 0 : 1,
+      child: Column(
+        children: [
+          Container(
             height: 120,
             padding: EdgeInsets.symmetric(
               vertical: 20,
             ),
-            child: Image(
-              image: isFolder == 1
-                  ? AssetImage("assets/folder.png")
-                  : isFolder == 2
-                      ? AssetImage("assets/engine.png")
-                      : AssetImage("assets/note.png"),
-              fit: BoxFit.contain,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Opacity(
+                  opacity: opacity ? 0.5 : 1,
+                  child: Image(
+                    image: isFolder == 1
+                        ? AssetImage(
+                            "assets/folder.png",
+                          )
+                        : isFolder == 2
+                            ? AssetImage("assets/engine.png")
+                            : AssetImage("assets/note.png"),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                opacity ? AnimatedArrowDown() : Container(),
+              ],
             ),
           ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: colorController.getBackGroundColorTheme(),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: colorController.getBackGroundColorTheme(),
+            ),
+            child: TextFormField(
+              onEditingComplete: () {
+                if (itemNameController.text.length <= 20) {
+                  updateItemTitle(itemId);
+
+                  if (isFolder == 2) {
+                    updateEngineName(itemId, itemNameController.text);
+                    print("executed");
+                  }
+
+                  this.title = itemNameController.text;
+                  controller.itemList
+                      .where((element) => element["itemId"] == itemId)
+                      .forEach((element) {
+                    element["title"] = itemNameController.text;
+                  });
+                  Get.forceAppUpdate();
+                  //Get.back();
+                  FocusScope.of(context).unfocus();
+                } else {
+                  Get.snackbar("Error!",
+                      "Name too long.\nIt must not be over 20 characters!",
+                      colorText: colorController.getBackGroundColorTheme());
+                }
+              },
+              style: GoogleFonts.montserrat(
+                  color: colorController.getTextColorTheme()),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              controller: itemNameController,
+            ),
           ),
-          child: TextField(
-            onEditingComplete: () {
-              if (itemNameController.text.length <= 20) {
-                title = itemNameController.text;
-                updateItemTitle(itemId);
-                //Get.back();
-                FocusScope.of(context).unfocus();
-                print(itemNameController.text);
-              } else {
-                Get.snackbar("Error!",
-                    "Name too long.\nIt must not be over 20 characters!",
-                    colorText: colorController.getBackGroundColorTheme());
-              }
-            },
-            style: GoogleFonts.montserrat(
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => GestureDetector(
+        onTap: () {
+          if (isFolder == 1) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => NoteAndFolders(
+                        itemId, title, insideOf,
+                        oldPageController: controller)));
+          } else if (isFolder == 2) {
+            Get.to(() => EnginePage(
+                engineId: itemId,
+                insideOf: insideOf,
+                name: itemNameController.text));
+          } else {
+            Get.to(() =>
+                NotePage(title, itemId, noteContent, insideOf, controller));
+          }
+        },
+        onLongPress: () {
+          Get.defaultDialog(
+            content: Text("Are you sure you want to delete this item?",
+                style: GoogleFonts.montserrat(
+                    color: colorController.getTextColorTheme())),
+            backgroundColor: colorController.getBackGroundColorTheme(),
+            title: "Delete this item?",
+            textConfirm: "Yes",
+            confirmTextColor: Colors.white,
+            cancelTextColor: AppColors.mainColor,
+            buttonColor: AppColors.mainColor,
+            textCancel: "No",
+            titleStyle: GoogleFonts.montserrat(
                 color: colorController.getTextColorTheme()),
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-            controller: itemNameController,
-          ),
-        ),
-      ],
+            onConfirm: () {
+              if (isFolder == 2) {
+                print("Engine deleting");
+                deleteEngine(itemId);
+              }
+
+              deleteItem(itemId);
+
+              Get.back();
+            },
+          );
+        },
+        child: (isFolder == 1)
+            ? _buildTile(context)
+            : Draggable(
+                onDragStarted: () {
+                  thisItemController.isMoving(true);
+                  controller.isMoving(true);
+                },
+                onDragEnd: (details) {
+                  thisItemController.isMoving(false);
+                  controller.isMoving(false);
+                },
+                data: this,
+                feedbackOffset: Offset.zero,
+                feedback: Container(
+                  height: 120,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 20,
+                  ),
+                  child: Image(
+                    image: isFolder == 1
+                        ? AssetImage("assets/folder.png")
+                        : isFolder == 2
+                            ? AssetImage("assets/engine.png")
+                            : AssetImage("assets/note.png"),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                child: _buildTile(context)),
+      ),
     );
   }
 }

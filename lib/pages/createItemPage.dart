@@ -96,13 +96,18 @@ class _CreateItemPageState extends State<CreateItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: colorController.getBackGroundColorTheme(),
+        iconTheme: IconThemeData(color: colorController.getTextColorTheme()),
+      ),
       resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.mainColor,
       body: Container(
         decoration: BoxDecoration(
           color: colorController.getBackGroundColorTheme(),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+        padding: EdgeInsets.symmetric(horizontal: 20),
         width: Get.width,
         child: Obx(
           () => getX_Controller.getLoading()
@@ -254,14 +259,10 @@ class _CreateItemPageState extends State<CreateItemPage> {
                                                   transition:
                                                       Transition.rightToLeft);
                                             }
-
-                                            Get.snackbar("Done!",
-                                                "Item inserted correctly",
-                                                colorText: colorController
-                                                    .getBackGroundColorTheme());
                                           } else {
                                             getX_Controller
                                                 .setNotLoadingLoading();
+                                            Get.back();
                                             Get.snackbar("Error", value.body,
                                                 snackPosition:
                                                     SnackPosition.BOTTOM,

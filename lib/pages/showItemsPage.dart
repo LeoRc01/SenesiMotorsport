@@ -32,30 +32,53 @@ class ShowItemsPage extends StatefulWidget {
 
 Controller showItemsPagecontroller;
 
-List<Item> selectedItems = [];
+//List<Item> selectedItems = [];
 //List<Item> itemList = [];
 
-class _ShowItemsPageState extends State<ShowItemsPage> {
+class _ShowItemsPageState extends State<ShowItemsPage>
+    with TickerProviderStateMixin {
   //DONE: Show all items from database
   @override
   void initState() {
     super.initState();
     showItemsPagecontroller = new Controller();
-
+    _tabController = new TabController(length: 5, vsync: this);
     getAllItems();
   }
 
   @override
   void dispose() {
     showItemsPagecontroller.dispose();
+
     super.dispose();
   }
 
   //DONE: Implement delete item
 
   List<dynamic> allItems = [];
+  List<Tab> tabList = [
+    Tab(
+      text: "Recently added",
+    ),
+    Tab(
+      text: "Tyres",
+    ),
+    Tab(
+      text: "Oils",
+    ),
+    Tab(
+      text: "Engines",
+    ),
+    Tab(
+      text: "Tools",
+    ),
+  ];
+
+  TabController _tabController;
 
   getAllItems() async {
+    showItemsPagecontroller.selectedItems
+        .removeRange(0, showItemsPagecontroller.selectedItems.length);
     allItems.removeRange(0, allItems.length);
     showItemsPagecontroller.itemList
         .removeRange(0, showItemsPagecontroller.itemList.length);
@@ -76,11 +99,15 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
           case 'Oils':
             image = "assets/oil.png";
             break;
+          case 'Engine':
+            image = "assets/engine.png";
+            break;
           default:
             image = "assets/default.png";
             break;
         }
         Item temp = new Item(
+          pageController: showItemsPagecontroller,
           text: item['itemName'],
           quantity: int.parse(item['quantity']),
           image: image,
@@ -103,7 +130,7 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
     Get.back();
     showItemsPagecontroller.setIsLoading();
     var str;
-    for (var item in selectedItems) {
+    for (var item in showItemsPagecontroller.selectedItems) {
       print("ITEMID: " + item.itemID);
       print("BAGID: " + widget.bagID.toString());
       var url = UrlApp.url +
@@ -121,7 +148,8 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
             colorText: colorController.getBackGroundColorTheme());
       });
     }
-    selectedItems.removeRange(0, selectedItems.length);
+    showItemsPagecontroller.selectedItems
+        .removeRange(0, showItemsPagecontroller.selectedItems.length);
     showItemsPagecontroller.setQuantityToZero();
     showItemsPagecontroller.setNotLoadingLoading();
     Get.back();
@@ -130,6 +158,146 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
 
     Get.snackbar("Done!", str,
         colorText: colorController.getBackGroundColorTheme());
+  }
+
+  firstTab() {
+    return RefreshIndicator(
+      onRefresh: () {
+        return getAllItems();
+      },
+      child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: showItemsPagecontroller.itemList.length,
+          itemBuilder: (context, index) {
+            return TweenAnimationBuilder(
+              child: showItemsPagecontroller.itemList[index],
+              tween: Tween(end: .0, begin: 1.0),
+              curve: Curves.ease,
+              duration: Duration(milliseconds: 1000),
+              builder: (context, value, child) {
+                return Transform.translate(
+                    child: child,
+                    offset: Offset(.0, ((300 + (100 * index)) * value)));
+              },
+            );
+          }),
+    );
+  }
+
+  secondTab() {
+    return RefreshIndicator(
+      onRefresh: () {
+        return getAllItems();
+      },
+      child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: showItemsPagecontroller.itemList.length,
+          itemBuilder: (context, index) {
+            if (showItemsPagecontroller.itemList[index].image ==
+                "assets/tyres.png") {
+              return TweenAnimationBuilder(
+                child: showItemsPagecontroller.itemList[index],
+                tween: Tween(end: .0, begin: 1.0),
+                curve: Curves.ease,
+                duration: Duration(milliseconds: 1000),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                      child: child,
+                      offset: Offset(.0, ((300 + (100 * index)) * value)));
+                },
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
+  }
+
+  thirdTab() {
+    return RefreshIndicator(
+      onRefresh: () {
+        return getAllItems();
+      },
+      child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: showItemsPagecontroller.itemList.length,
+          itemBuilder: (context, index) {
+            if (showItemsPagecontroller.itemList[index].image ==
+                "assets/oil.png") {
+              return TweenAnimationBuilder(
+                child: showItemsPagecontroller.itemList[index],
+                tween: Tween(end: .0, begin: 1.0),
+                curve: Curves.ease,
+                duration: Duration(milliseconds: 1000),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                      child: child,
+                      offset: Offset(.0, ((300 + (100 * index)) * value)));
+                },
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
+  }
+
+  fourthTab() {
+    return RefreshIndicator(
+      onRefresh: () {
+        return getAllItems();
+      },
+      child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: showItemsPagecontroller.itemList.length,
+          itemBuilder: (context, index) {
+            if (showItemsPagecontroller.itemList[index].image ==
+                "assets/engine.png") {
+              return TweenAnimationBuilder(
+                child: showItemsPagecontroller.itemList[index],
+                tween: Tween(end: .0, begin: 1.0),
+                curve: Curves.ease,
+                duration: Duration(milliseconds: 1000),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                      child: child,
+                      offset: Offset(.0, ((300 + (100 * index)) * value)));
+                },
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
+  }
+
+  fifthTab() {
+    return RefreshIndicator(
+      onRefresh: () {
+        return getAllItems();
+      },
+      child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: showItemsPagecontroller.itemList.length,
+          itemBuilder: (context, index) {
+            if (showItemsPagecontroller.itemList[index].image ==
+                "assets/tool.png") {
+              return TweenAnimationBuilder(
+                child: showItemsPagecontroller.itemList[index],
+                tween: Tween(end: .0, begin: 1.0),
+                curve: Curves.ease,
+                duration: Duration(milliseconds: 1000),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                      child: child,
+                      offset: Offset(.0, ((300 + (100 * index)) * value)));
+                },
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
   }
 
   @override
@@ -142,10 +310,105 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
           color: colorController.getTextColorTheme(),
         ),
         onPressed: () {
-          Get.to(CreateItemPage(widget.bagID), transition: Transition.zoom);
+          Get.to(() => CreateItemPage(widget.bagID));
         },
       ),
       floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          !widget.comingFromPage
+              ? Obx(
+                  () => GestureDetector(
+                    onTap: () {
+                      if (showItemsPagecontroller.selectedItems.length > 0) {
+                        Get.defaultDialog(
+                            title: "Add these items?",
+                            titleStyle: GoogleFonts.montserrat(
+                                color: colorController.getTextColorTheme()),
+                            backgroundColor:
+                                colorController.getBackGroundColorTheme(),
+                            content: Container(),
+                            actions: [
+                              GestureDetector(
+                                onTap: () => Get.back(),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.red),
+                                  child: Text(
+                                    "No",
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () async {
+                                  //DONE: Add items to bag
+                                  addItems();
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: AppColors.mainColor),
+                                  child: Text(
+                                    "Yes",
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ]);
+                      }
+                    },
+                    child: Container(
+                      margin: EdgeInsets.only(right: 20, top: 5),
+                      child: Badge(
+                        shape: BadgeShape.circle,
+                        toAnimate: true,
+                        badgeColor: colorController.getBackGroundColorTheme(),
+                        position: BadgePosition.topStart(),
+                        badgeContent: Text(
+                          showItemsPagecontroller.selectedItems.length
+                              .toString(),
+                          style: GoogleFonts.montserrat(
+                              color: colorController.getTextColorTheme()),
+                        ),
+                        child: FaIcon(FontAwesomeIcons.suitcase,
+                            color: colorController.getBackGroundColorTheme()),
+                      ),
+                    ),
+                  ),
+                )
+              : Container()
+        ],
+        leading: IconButton(
+          icon: FaIcon(
+            FontAwesomeIcons.chevronLeft,
+            color: colorController.getBackGroundColorTheme(),
+          ),
+          onPressed: () {
+            Get.back();
+          },
+        ),
+        title: Text(
+          "Your Items",
+          style: GoogleFonts.montserrat(
+              color: colorController.getBackGroundColorTheme(),
+              fontSize: Get.width * 0.07,
+              fontWeight: FontWeight.w500),
+        ),
+      ),
       body: Container(
         height: Get.height,
         decoration: BoxDecoration(
@@ -159,181 +422,56 @@ class _ShowItemsPageState extends State<ShowItemsPage> {
               ? Center(
                   child: CircularProgressIndicator(),
                 )
-              : Column(
-                  children: [
-                    //APPBAR
-                    Container(
-                      //padding: EdgeInsets.symmetric(horizontal: 10),
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              : showItemsPagecontroller.itemList.length != 0
+                  ? SafeArea(
+                      child: Column(
                         children: [
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: FaIcon(
-                                  FontAwesomeIcons.chevronLeft,
-                                  color:
-                                      colorController.getBackGroundColorTheme(),
-                                ),
-                                onPressed: () {
-                                  Get.back();
-                                },
-                              ),
-                              Text(
-                                "Your Items",
-                                style: GoogleFonts.montserrat(
-                                    color: colorController
-                                        .getBackGroundColorTheme(),
-                                    fontSize: Get.width * 0.07,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ],
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 7),
+                            child: TabBar(
+                              isScrollable: true,
+                              controller: _tabController,
+                              tabs: tabList,
+                              labelStyle: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.w500),
+                              unselectedLabelStyle: GoogleFonts.montserrat(),
+                              labelColor:
+                                  colorController.getBackGroundColorTheme(),
+                              unselectedLabelColor:
+                                  colorController.getBackGroundColorTheme(),
+                              indicator: BoxDecoration(
+                                  border: Border.all(
+                                      color: colorController
+                                          .getBackGroundColorTheme(),
+                                      width: .5),
+                                  color: AppColors.mainColor,
+                                  borderRadius: BorderRadius.circular(15)),
+                            ),
                           ),
-                          !widget.comingFromPage
-                              ? Obx(
-                                  () => GestureDetector(
-                                    onTap: () {
-                                      if (showItemsPagecontroller
-                                              .getQuantity() >
-                                          0) {
-                                        Get.defaultDialog(
-                                            title: "Add these items?",
-                                            titleStyle: GoogleFonts.montserrat(
-                                                color: colorController
-                                                    .getTextColorTheme()),
-                                            backgroundColor: colorController
-                                                .getBackGroundColorTheme(),
-                                            content: Container(),
-                                            actions: [
-                                              GestureDetector(
-                                                onTap: () => Get.back(),
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 10),
-                                                  decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      color: Colors.red),
-                                                  child: Text(
-                                                    "No",
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600),
-                                                  ),
-                                                ),
-                                              ),
-                                              GestureDetector(
-                                                onTap: () async {
-                                                  //DONE: Add items to bag
-                                                  addItems();
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 10),
-                                                  decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      color:
-                                                          AppColors.mainColor),
-                                                  child: Text(
-                                                    "Yes",
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600),
-                                                  ),
-                                                ),
-                                              ),
-                                            ]);
-                                      }
-                                    },
-                                    child: Container(
-                                      margin:
-                                          EdgeInsets.only(right: 20, top: 5),
-                                      child: Badge(
-                                        shape: BadgeShape.circle,
-                                        toAnimate: true,
-                                        badgeColor: colorController
-                                            .getBackGroundColorTheme(),
-                                        position: BadgePosition.topStart(),
-                                        badgeContent: Text(
-                                          showItemsPagecontroller.quantity
-                                              .toString(),
-                                          style: GoogleFonts.montserrat(
-                                              color: colorController
-                                                  .getTextColorTheme()),
-                                        ),
-                                        child: Icon(Icons.shopping_bag_outlined,
-                                            color: colorController
-                                                .getBackGroundColorTheme()),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Container()
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                                controller: _tabController,
+                                children: [
+                                  firstTab(),
+                                  secondTab(),
+                                  thirdTab(),
+                                  fourthTab(),
+                                  fifthTab(),
+                                ]),
+                          ),
                         ],
                       ),
-                    ),
-
-                    //BODY PAGE
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () {
-                          return getAllItems();
-                        },
-                        child: Obx(
-                          () => showItemsPagecontroller.getLoading()
-                              ? Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                              : showItemsPagecontroller.itemList.length != 0
-                                  ? ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: showItemsPagecontroller
-                                          .itemList.length,
-                                      itemBuilder: (context, index) {
-                                        return TweenAnimationBuilder(
-                                          child: showItemsPagecontroller
-                                              .itemList[index],
-                                          tween: Tween(end: .0, begin: 1.0),
-                                          curve: Curves.ease,
-                                          duration:
-                                              Duration(milliseconds: 1000),
-                                          builder: (context, value, child) {
-                                            return Transform.translate(
-                                                child: child,
-                                                offset: Offset(
-                                                    .0,
-                                                    ((300 + (100 * index)) *
-                                                        value)));
-                                          },
-                                        );
-                                      })
-                                  : Expanded(
-                                      child: Center(
-                                        child: Text(
-                                          "You have no items available.",
-                                          style: GoogleFonts.montserrat(
-                                              color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                        ),
+                    )
+                  : Center(
+                      child: Text(
+                        "You have no items available.",
+                        style: GoogleFonts.montserrat(
+                            color: colorController.getBackGroundColorTheme()),
                       ),
                     ),
-                  ],
-                ),
         ),
       ),
     );
@@ -346,18 +484,29 @@ class Item extends StatefulWidget {
   int quantity;
   final itemID;
   bool state;
+  Controller pageController;
 
   Item(
-      {Key key, this.image, this.text, this.quantity, this.itemID, this.state});
+      {Key key,
+      this.image,
+      this.text,
+      this.quantity,
+      this.itemID,
+      this.state,
+      @required this.pageController});
 
   @override
   _ItemState createState() => _ItemState();
 }
 
-class _ItemState extends State<Item> {
+class _ItemState extends State<Item> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   Color selectedColor = colorController.getBackGroundColorTheme();
   bool click = false;
   int initQuantity = 0;
+
   @override
   void initState() {
     super.initState();
@@ -365,41 +514,43 @@ class _ItemState extends State<Item> {
   }
 
   deleteItem() async {
+    widget.pageController.setIsLoading();
     var url = UrlApp.url + "/deleteItem.php?itemId=" + widget.itemID.toString();
     Response response = await http.get(url).then((value) {
-      Get.back();
-      Get.to(() => ShowItemsPage(), transition: Transition.noTransition);
-      Get.snackbar("Done!", "Item deleted correctly",
-          colorText: colorController.getBackGroundColorTheme());
+      Future.delayed(Duration(milliseconds: 500), () {
+        // 5 seconds over, navigate to Page2.
+        widget.pageController.setNotLoadingLoading();
+        Get.back();
+        Get.to(() => ShowItemsPage(), transition: Transition.noTransition);
+      });
     }).catchError((error) {
+      widget.pageController.setNotLoadingLoading();
       Get.snackbar("Error", "No Internet",
           colorText: colorController.getBackGroundColorTheme());
     });
   }
 
   updateItem() async {
-    if (widget.quantity == 0) {
-      //Elimino l'elemento
-      deleteItem();
-    } else {
-      //Aggiorno l'elemento
-      var url = UrlApp.url +
-          "/updateItemQuantity.php?itemId=" +
-          widget.itemID +
-          "&quantity=" +
-          widget.quantity.toString();
-      Response response = await http.get(url).then((value) {
-        print("Done!");
-        Get.snackbar("Done!", "Item updated correctly",
-            colorText: colorController.getBackGroundColorTheme());
-        setState(() {
-          initQuantity = widget.quantity;
-        });
-      }).catchError((error) {
-        Get.snackbar("Error", "No Internet.",
-            colorText: colorController.getBackGroundColorTheme());
+    //Aggiorno l'elemento
+    widget.pageController.setNotLoadingLoading();
+    var url = UrlApp.url +
+        "/updateItemQuantity.php?itemId=" +
+        widget.itemID +
+        "&quantity=" +
+        widget.quantity.toString();
+    Response response = await http.get(url).then((value) {
+      widget.pageController.setNotLoadingLoading();
+      print("Done!");
+      //Get.snackbar("Done!", "Item updated correctly",
+      //colorText: colorController.getBackGroundColorTheme());
+      setState(() {
+        initQuantity = widget.quantity;
       });
-    }
+    }).catchError((error) {
+      widget.pageController.setNotLoadingLoading();
+      Get.snackbar("Error", "No Internet.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
   }
 
   @override
@@ -411,18 +562,18 @@ class _ItemState extends State<Item> {
             if (widget.quantity != 0) {
               selectedColor = Colors.green;
               click = !click;
-              selectedItems.add(widget);
+              showItemsPagecontroller.selectedItems.add(widget);
               showItemsPagecontroller.incrementQuantity();
-              selectedItems.forEach((element) {
+              showItemsPagecontroller.selectedItems.forEach((element) {
                 print(element.itemID);
               });
             }
           } else {
-            selectedItems.remove(widget);
+            showItemsPagecontroller.selectedItems.remove(widget);
             showItemsPagecontroller.decrementQuantity();
             selectedColor = colorController.getBackGroundColorTheme();
             click = !click;
-            print(selectedItems);
+            print(showItemsPagecontroller.selectedItems);
           }
         });
       },

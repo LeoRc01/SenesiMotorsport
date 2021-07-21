@@ -106,6 +106,7 @@ class Controller extends GetxController {
 
   //SHOW ITEMS PAGE SECTION
   List<dynamic> itemList = [].obs;
+  List<dynamic> selectedItems = [].obs;
 
   insertItemIntoList(item) {
     itemList.add(item);
@@ -130,6 +131,7 @@ class Controller extends GetxController {
   /////////////
 
   //NOTE PAGE SECTION
+  var isMoving = false.obs;
   var isModified = false.obs;
 
   setModified(state) {
@@ -159,4 +161,6 @@ class Controller extends GetxController {
   List<dynamic> breakInItemList = [].obs;
   List<dynamic> race_practiceItemList = [].obs;
   List<dynamic> mantainenceItemList = [].obs;
+
+  Map<String, dynamic> generalInfo = {};
 }

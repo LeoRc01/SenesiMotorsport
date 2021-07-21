@@ -1,15 +1,17 @@
 import 'dart:convert';
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:flutter/services.dart' show rootBundle;
-
+import 'package:SenesiMotorsport/models/gridItemTile.dart';
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
 import 'package:SenesiMotorsport/controllers/pdfCreator.dart';
 import 'package:SenesiMotorsport/main.dart';
 import 'package:SenesiMotorsport/url/url.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -17,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
+import 'package:uuid/uuid.dart';
 
 class EnginePage extends StatelessWidget {
   Controller enginePageController = new Controller();
@@ -41,23 +44,25 @@ class EnginePage extends StatelessWidget {
       @required String name,
       @required this.engineId}) {
     enginePageController.setIsLoading();
-    fetchBreakInData().then((value) {
-      fetchRacesPracticeData().then((value) {
-        fetchMantainenceData().then((value) {
-          initControllers();
-          print("name: " + name);
-          engineName.text = name;
-          selectedDateBreakInController.text = "Select a date";
-          selectedDateRacePracticeController.text = "Select a date";
-          selectedDateMantainenceController.text = "Select a date";
+    initControllers();
+    fetchGeneralInfo().then((value) {
+      fetchBreakInData().then((value) {
+        fetchRacesPracticeData().then((value) {
+          fetchMantainenceData().then((value) {
+            engineName.text = name;
+            selectedDateBreakInController.text = "Select a date";
+            selectedDateRacePracticeController.text = "Select a date";
+            selectedDateMantainenceController.text = "Select a date";
 
-          enginePageController.setNotLoadingLoading();
+            enginePageController.setNotLoadingLoading();
+          });
         });
       });
     });
   }
 
   TextEditingController engineName;
+  TextEditingController generalInfoController;
 
   //BREAKIN
   TextEditingController selectedDateBreakInController;
@@ -74,8 +79,28 @@ class EnginePage extends StatelessWidget {
   TextEditingController selectedDateMantainenceController;
   TextEditingController noteController;
 
+  Uuid _uuid = Uuid();
+
+  updateGeneralInfo() async {
+    String createdUuid = _uuid.v1();
+    var url = UrlApp.url +
+        "/setGeneralInfo.php?dataId=" +
+        createdUuid +
+        "&engineId=" +
+        engineId +
+        "&content=" +
+        generalInfoController.text;
+    Response res = await http.get(url).then((value) {
+      print(value.body);
+      Get.snackbar("Success!", "Data updated correctly.");
+    }).catchError((error) {
+      Get.snackbar("Error", error.toString());
+    });
+  }
+
   initControllers() {
     engineName = new TextEditingController();
+    generalInfoController = new TextEditingController();
     selectedDateBreakInController = new TextEditingController();
     selectedDateRacePracticeController = new TextEditingController();
     selectedDateMantainenceController = new TextEditingController();
@@ -187,160 +212,6 @@ class EnginePage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future fetchBreakInData() async {
-    enginePageController.breakInItemList
-        .removeRange(0, enginePageController.breakInItemList.length);
-    var url = UrlApp.url + "/getBreakIn.php?id=" + engineId;
-
-    Response res = await http.get(url).then((value) {
-      List<dynamic> tempData = jsonDecode(value.body);
-      for (var item in tempData) {
-        enginePageController.breakInItemList
-            .add(GridItemTile(item["dateOf"], itemTextStyle));
-        enginePageController.breakInItemList
-            .add(GridItemTile(item["fuel"], itemTextStyle));
-        enginePageController.breakInItemList
-            .add(GridItemTile(item["timeOf"], itemTextStyle));
-      }
-    }).catchError((onError) {
-      print(onError);
-    });
-  }
-
-  Future fetchRacesPracticeData() async {
-    enginePageController.race_practiceItemList
-        .removeRange(0, enginePageController.race_practiceItemList.length);
-    var url = UrlApp.url + "/getRacesPractice.php?id=" + engineId;
-
-    Response res = await http.get(url).then((value) {
-      List<dynamic> tempData = jsonDecode(value.body);
-      for (var item in tempData) {
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(item["dateOf"], itemTextStyle));
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(item["fuel"], itemTextStyle));
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(item["parL"], itemTextStyle));
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(item["totL"], itemTextStyle));
-      }
-    });
-  }
-
-  Future fetchMantainenceData() async {
-    enginePageController.mantainenceItemList
-        .removeRange(0, enginePageController.mantainenceItemList.length);
-    var url = UrlApp.url + "/getMantainence.php?id=" + engineId;
-
-    Response res = await http.get(url).then((value) {
-      List<dynamic> tempData = jsonDecode(value.body);
-      for (var item in tempData) {
-        enginePageController.mantainenceItemList
-            .add(GridItemTile(item["dateOf"], itemTextStyle));
-        enginePageController.mantainenceItemList
-            .add(GridItemTile.isNotes(item["notes"], itemTextStyle));
-      }
-    });
-  }
-
-  addBreakInDataToList() async {
-    if (_addBreakInDataFormKey.currentState.validate() &&
-        selectedDateBreakInController.text != "Select a date") {
-      enginePageController.setIsLoading();
-
-      var url = UrlApp.url +
-          "/setBreakIn.php?id=" +
-          engineId +
-          "&dateOf=" +
-          selectedDateBreakInController.text +
-          "&fuel=" +
-          fuelUsedBreakInController.text +
-          "&timeOf=" +
-          timeController.text;
-
-      Response res = await http.get(url).then((value) {
-        print(value.body);
-        enginePageController.breakInItemList.add(
-            GridItemTile(selectedDateBreakInController.text, itemTextStyle));
-        enginePageController.breakInItemList
-            .add(GridItemTile(fuelUsedBreakInController.text, itemTextStyle));
-        enginePageController.breakInItemList
-            .add(GridItemTile(timeController.text, itemTextStyle));
-        selectedDateBreakInController.text = "Select a date";
-        fuelUsedBreakInController.text = "";
-        timeController.text = "";
-      }).catchError((error) {
-        print(error);
-      });
-
-      Get.back();
-      enginePageController.setNotLoadingLoading();
-    }
-  }
-
-  addRacePracticeDataToList() async {
-    if (_addBreakInDataFormKey.currentState.validate() &&
-        selectedDateRacePracticeController.text != "Select a date") {
-      var url = UrlApp.url +
-          "/setRacesPractice.php?id=" +
-          engineId +
-          "&dateOf=" +
-          selectedDateRacePracticeController.text +
-          "&fuel=" +
-          fuelUsedRacePracticeController.text +
-          "&parL=" +
-          parLiters.text +
-          "&totL=" +
-          totLiters.text;
-
-      print(url);
-
-      Response res = await http.get(url).then((value) {
-        print(value.body);
-        enginePageController.race_practiceItemList.add(GridItemTile(
-            selectedDateRacePracticeController.text, itemTextStyle));
-        enginePageController.race_practiceItemList.add(
-            GridItemTile(fuelUsedRacePracticeController.text, itemTextStyle));
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(parLiters.text, itemTextStyle));
-        enginePageController.race_practiceItemList
-            .add(GridItemTile(totLiters.text, itemTextStyle));
-        selectedDateRacePracticeController.text = "Select a date";
-        fuelUsedRacePracticeController.text = "";
-        parLiters.text = "";
-        totLiters.text = "";
-      }).catchError((onError) {
-        print(onError);
-      });
-
-      Get.back();
-    }
-  }
-
-  addMantainenceDataToList() async {
-    if (_addBreakInDataFormKey.currentState.validate() &&
-        selectedDateMantainenceController.text != "Select a date") {
-      var url = UrlApp.url +
-          "/setMantainence.php?id=" +
-          engineId +
-          "&dateOf=" +
-          selectedDateMantainenceController.text +
-          "&note=" +
-          noteController.text;
-
-      Response res = await http.get(url).then((value) {
-        enginePageController.mantainenceItemList.add(GridItemTile(
-            selectedDateMantainenceController.text, itemTextStyle));
-        enginePageController.mantainenceItemList
-            .add(GridItemTile.isNotes(noteController.text, itemTextStyle));
-        selectedDateMantainenceController.text = "Select a date";
-        noteController.text = "";
-      });
-
-      Get.back();
-    }
   }
 
   breakInDataDialog(context) {
@@ -549,7 +420,199 @@ class EnginePage extends StatelessWidget {
         backgroundColor: colorController.getBackGroundColorTheme());
   }
 
+  Future fetchGeneralInfo() async {
+    enginePageController.generalInfo.removeWhere((key, value) => true);
+
+    var url = UrlApp.url + "/getGeneralInfo.php?id=" + engineId;
+
+    Response res = await http.get(url).then((value) {
+      List<dynamic> tempData = jsonDecode(value.body);
+      for (var item in tempData) {
+        Map<String, dynamic> temp = {
+          "content": item["content"],
+          "dataId": item["dataId"],
+        };
+        generalInfoController.text = temp["content"].toString();
+        enginePageController.generalInfo.addAll(temp);
+      }
+      print("General Info: " + enginePageController.generalInfo.toString());
+    }).catchError((onError) {
+      print(onError);
+    });
+  }
+
+  Future fetchBreakInData() async {
+    enginePageController.breakInItemList
+        .removeRange(0, enginePageController.breakInItemList.length);
+    var url = UrlApp.url + "/getBreakIn.php?id=" + engineId;
+
+    Response res = await http.get(url).then((value) {
+      List<dynamic> tempData = jsonDecode(value.body);
+      for (var item in tempData) {
+        Map<String, dynamic> temp = {
+          "dateOf": item["dateOf"],
+          "fuel": item["fuel"],
+          "timeOf": item["timeOf"],
+          "dataId": item["dataId"],
+        };
+        enginePageController.breakInItemList.add(temp);
+      }
+    }).catchError((onError) {
+      print(onError);
+    });
+  }
+
+  Future fetchRacesPracticeData() async {
+    enginePageController.race_practiceItemList
+        .removeRange(0, enginePageController.race_practiceItemList.length);
+    var url = UrlApp.url + "/getRacesPractice.php?id=" + engineId;
+
+    Response res = await http.get(url).then((value) {
+      List<dynamic> tempData = jsonDecode(value.body);
+      for (var item in tempData) {
+        Map<String, dynamic> temp = {
+          "dateOf": item["dateOf"],
+          "fuel": item["fuel"],
+          "parL": item["parL"],
+          "totL": item["totL"],
+          "dataId": item["dataId"],
+        };
+        enginePageController.race_practiceItemList.add(temp);
+      }
+    });
+  }
+
+  Future fetchMantainenceData() async {
+    enginePageController.mantainenceItemList
+        .removeRange(0, enginePageController.mantainenceItemList.length);
+    var url = UrlApp.url + "/getMantainence.php?id=" + engineId;
+
+    Response res = await http.get(url).then((value) {
+      List<dynamic> tempData = jsonDecode(value.body);
+      for (var item in tempData) {
+        Map<String, dynamic> temp = {
+          "dateOf": item["dateOf"],
+          "notes": item["notes"],
+          "dataId": item["dataId"],
+        };
+        enginePageController.mantainenceItemList.add(temp);
+      }
+    });
+  }
+
+  addBreakInDataToList() async {
+    if (_addBreakInDataFormKey.currentState.validate() &&
+        selectedDateBreakInController.text != "Select a date") {
+      enginePageController.setIsLoading();
+
+      String createdUuid = _uuid.v1();
+
+      var url = UrlApp.url +
+          "/setBreakIn.php?id=" +
+          engineId +
+          "&dateOf=" +
+          selectedDateBreakInController.text +
+          "&fuel=" +
+          fuelUsedBreakInController.text +
+          "&timeOf=" +
+          timeController.text +
+          "&dataId=" +
+          createdUuid;
+
+      Response res = await http.get(url).then((value) {
+        Map<String, dynamic> temp = {
+          "dateOf": selectedDateBreakInController.text,
+          "fuel": fuelUsedBreakInController.text,
+          "timeOf": timeController.text,
+          "dataId": createdUuid,
+        };
+        enginePageController.breakInItemList.add(temp);
+
+        selectedDateBreakInController.text = "Select a date";
+        fuelUsedBreakInController.text = "";
+        timeController.text = "";
+      }).catchError((error) {
+        print(error);
+      });
+
+      Get.back();
+      enginePageController.setNotLoadingLoading();
+    }
+  }
+
+  addRacePracticeDataToList() async {
+    if (_addBreakInDataFormKey.currentState.validate() &&
+        selectedDateRacePracticeController.text != "Select a date") {
+      String createdUuid = _uuid.v1();
+      var url = UrlApp.url +
+          "/setRacesPractice.php?id=" +
+          engineId +
+          "&dateOf=" +
+          selectedDateRacePracticeController.text +
+          "&fuel=" +
+          fuelUsedRacePracticeController.text +
+          "&parL=" +
+          parLiters.text +
+          "&totL=" +
+          totLiters.text +
+          "&dataId=" +
+          createdUuid;
+
+      Response res = await http.get(url).then((value) {
+        Map<String, dynamic> temp = {
+          "dateOf": selectedDateRacePracticeController.text,
+          "fuel": fuelUsedRacePracticeController.text,
+          "parL": parLiters.text,
+          "totL": totLiters.text,
+          "dataId": createdUuid,
+        };
+        enginePageController.race_practiceItemList.add(temp);
+
+        selectedDateRacePracticeController.text = "Select a date";
+        fuelUsedRacePracticeController.text = "";
+        parLiters.text = "";
+        totLiters.text = "";
+      }).catchError((onError) {
+        print(onError);
+      });
+
+      Get.back();
+    }
+  }
+
+  addMantainenceDataToList() async {
+    if (_addBreakInDataFormKey.currentState.validate() &&
+        selectedDateMantainenceController.text != "Select a date") {
+      String createdUuid = _uuid.v1();
+
+      var url = UrlApp.url +
+          "/setMantainence.php?id=" +
+          engineId +
+          "&dateOf=" +
+          selectedDateMantainenceController.text +
+          "&note=" +
+          noteController.text +
+          "&dataId=" +
+          createdUuid;
+
+      Response res = await http.get(url).then((value) {
+        Map<String, dynamic> temp = {
+          "dateOf": selectedDateMantainenceController.text,
+          "notes": noteController.text,
+          "dataId": createdUuid
+        };
+        enginePageController.mantainenceItemList.add(temp);
+
+        selectedDateMantainenceController.text = "Select a date";
+        noteController.text = "";
+      });
+
+      Get.back();
+    }
+  }
+
   createPdf() async {
+    print(generalInfoController.text);
     PdfDocument document = PdfDocument();
 
     //Setto la grandezza della pagina
@@ -612,15 +675,11 @@ class EnginePage extends StatelessWidget {
 
     PdfGridRow row;
 
-    for (int i = 0;
-        i < enginePageController.breakInItemList.length;
-        i = i + 3) {
+    for (int i = 0; i < enginePageController.breakInItemList.length; i++) {
       row = breakInGrid.rows.add();
-      row.cells[0].value = enginePageController.breakInItemList[i].getName();
-      row.cells[1].value =
-          enginePageController.breakInItemList[i + 1].getName();
-      row.cells[2].value =
-          enginePageController.breakInItemList[i + 2].getName();
+      row.cells[0].value = enginePageController.breakInItemList[i]["dateOf"];
+      row.cells[1].value = enginePageController.breakInItemList[i]["fuel"];
+      row.cells[2].value = enginePageController.breakInItemList[i]["timeOf"];
     }
 
     breakInGrid.style.cellPadding = PdfPaddings(left: 5, top: 5);
@@ -677,20 +736,14 @@ class EnginePage extends StatelessWidget {
         i = i + 4) {
       row1 = raceGrid.rows.add();
 
-      print(enginePageController.race_practiceItemList);
-      print(enginePageController.race_practiceItemList[i].getName());
-      print(enginePageController.race_practiceItemList[i + 1].getName());
-      print(enginePageController.race_practiceItemList[i + 2].getName());
-      print(enginePageController.race_practiceItemList[i + 3].getName());
-
       row1.cells[0].value =
-          enginePageController.race_practiceItemList[i].getName();
+          enginePageController.race_practiceItemList[i]["dateOf"];
       row1.cells[1].value =
-          enginePageController.race_practiceItemList[i + 1].getName();
+          enginePageController.race_practiceItemList[i]["fuel"];
       row1.cells[2].value =
-          enginePageController.race_practiceItemList[i + 2].getName();
+          enginePageController.race_practiceItemList[i]["parL"];
       row1.cells[3].value =
-          enginePageController.race_practiceItemList[i + 3].getName();
+          enginePageController.race_practiceItemList[i]["totL"];
     }
 
     raceGrid.style.cellPadding = PdfPaddings(left: 5, top: 5);
@@ -744,9 +797,9 @@ class EnginePage extends StatelessWidget {
       row2 = mantainenceGrid.rows.add();
 
       row2.cells[0].value =
-          enginePageController.mantainenceItemList[i].getName();
+          enginePageController.mantainenceItemList[i]["dateOf"];
       row2.cells[1].value =
-          enginePageController.mantainenceItemList[i + 1].getName();
+          enginePageController.mantainenceItemList[i]["notes"];
     }
 
     mantainenceGrid.style.cellPadding = PdfPaddings(left: 5, top: 5);
@@ -757,11 +810,30 @@ class EnginePage extends StatelessWidget {
           page.getClientSize().height),
     ) as PdfLayoutResult;
 
+    page.graphics.drawString(
+      "General Info: ",
+      PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold),
+      bounds: Rect.fromLTWH(0, result.bounds.bottom + 30,
+          page.getClientSize().width, page.getClientSize().height),
+    );
+
+    page.graphics.drawString(
+      generalInfoController.text,
+      PdfStandardFont(
+        PdfFontFamily.helvetica,
+        12,
+      ),
+      bounds: Rect.fromLTWH(0, result.bounds.bottom + 60,
+          page.getClientSize().width, page.getClientSize().height),
+    );
+
     List<int> bytes = document.save();
     document.dispose();
     var fileName = engineName.text;
     saveAndLaunch(bytes, "$fileName.pdf");
   }
+
+  FocusNode _focusNode = new FocusNode();
 
   Future<Uint8List> _readImageData(String name) async {
     final data = await rootBundle.load("assets/$name");
@@ -801,222 +873,285 @@ class EnginePage extends StatelessWidget {
         ),
         resizeToAvoidBottomInset: false,
         backgroundColor: colorController.getBackGroundColorTheme(),
-        body: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: SafeArea(
-              child: enginePageController.getLoading()
-                  ? Container(
-                      child: Center(
-                          child: Text("Loading...",
+        body: GestureDetector(
+          onTap: () {
+            _focusNode.unfocus();
+          },
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: SafeArea(
+                child: enginePageController.getLoading()
+                    ? Container(
+                        child: Center(
+                            child: Text("Loading...",
+                                style: GoogleFonts.montserrat(
+                                    color:
+                                        colorController.getTextColorTheme()))),
+                      )
+                    : Form(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //INFO FORM
+                            Row(
+                              children: [
+                                Text(
+                                  "Engine: ",
+                                  style: titleStyle,
+                                ),
+                                Expanded(
+                                  child: TextFormField(
+                                    enabled: false,
+                                    onEditingComplete: () {
+                                      print(engineName.text);
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none),
+                                    style: titleStyle,
+                                    controller: engineName,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+
+                            Text(
+                              "General Info: ",
+                              style: titleStyle,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            TextField(
+                              focusNode: _focusNode,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 4,
+                              controller: generalInfoController,
                               style: GoogleFonts.montserrat(
-                                  color: colorController.getTextColorTheme()))),
-                    )
-                  : Form(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          //INFO FORM
-                          Text(
-                            "Engine: " + engineName.text,
-                            style: titleStyle,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Divider(
-                            thickness: 1,
-                            color: AppColors.mainColor,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-
-                          //BREAK-IN FORM
-                          Center(
-                            child: Text(
-                              "Break-in",
-                              style: titleStyle,
+                                  color: colorController.getTextColorTheme()),
+                              decoration: InputDecoration(
+                                hintStyle: GoogleFonts.montserrat(),
+                                hintText: "",
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20)),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                "Date",
-                                style: subTitleStyle,
-                              ),
-                              Text(
-                                "Fuel",
-                                style: subTitleStyle,
-                              ),
-                              Text(
-                                "Time",
-                                style: subTitleStyle,
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          StaggeredGridView.countBuilder(
-                            crossAxisCount: 3,
-                            itemCount:
-                                enginePageController.breakInItemList.length,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return enginePageController
-                                  .breakInItemList[index];
-                            },
-                            staggeredTileBuilder: (index) =>
-                                StaggeredTile.fit(1),
-                          ),
-                          SizedBox(
-                            height: 25,
-                          ),
-                          AddDataButton(
-                            onTap: () {
-                              breakInDataDialog(context);
-                            },
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Divider(
-                            thickness: 1,
-                            color: AppColors.mainColor,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
 
-                          //RACE/PRACTISE FORM
-                          Center(
-                            child: Text(
-                              "Races / Practice",
-                              style: titleStyle,
+                            SizedBox(
+                              height: 20,
                             ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                "Date",
-                                style: subTitleStyle,
-                              ),
-                              Text(
-                                "Fuel",
-                                style: subTitleStyle,
-                              ),
-                              Text(
-                                "Par. L",
-                                style: subTitleStyle,
-                              ),
-                              Text(
-                                "Tot. L",
-                                style: subTitleStyle,
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          StaggeredGridView.countBuilder(
-                            crossAxisCount: 4,
-                            itemCount: enginePageController
-                                .race_practiceItemList.length,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return enginePageController
-                                  .race_practiceItemList[index];
-                            },
-                            staggeredTileBuilder: (index) =>
-                                StaggeredTile.fit(1),
-                          ),
-                          SizedBox(
-                            height: 25,
-                          ),
-                          AddDataButton(
-                            onTap: () {
-                              racesPracticeDialog(context);
-                            },
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Divider(
-                            thickness: 1,
-                            color: AppColors.mainColor,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
+                            AddDataButton(
+                              onTap: () {
+                                updateGeneralInfo();
+                              },
+                              text: "Update",
+                            ),
 
-                          //MANTAINENCE FORM
-                          Center(
-                            child: Text(
-                              "Mantainence",
-                              style: titleStyle,
+                            Divider(
+                              thickness: 1,
+                              color: AppColors.mainColor,
                             ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                "Date",
-                                style: subTitleStyle,
+                            SizedBox(
+                              height: 20,
+                            ),
+
+                            //BREAK-IN FORM
+                            Center(
+                              child: Text(
+                                "Break-in",
+                                style: titleStyle,
                               ),
-                              Text(
-                                "Notes",
-                                style: subTitleStyle,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  "Date",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Fuel",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Time",
+                                  style: subTitleStyle,
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            StaggeredGridView.countBuilder(
+                              crossAxisCount: 1,
+                              itemCount:
+                                  enginePageController.breakInItemList.length,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemBuilder: (BuildContext context, int index) {
+                                return GridItemTile.isBreakIn(
+                                  enginePageController.breakInItemList[index],
+                                  itemTextStyle,
+                                  pageController: enginePageController,
+                                );
+                              },
+                              staggeredTileBuilder: (index) =>
+                                  StaggeredTile.fit(1),
+                            ),
+                            SizedBox(
+                              height: 25,
+                            ),
+                            AddDataButton(
+                              onTap: () {
+                                breakInDataDialog(context);
+                              },
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: AppColors.mainColor,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+
+                            //RACE/PRACTISE FORM
+                            Center(
+                              child: Text(
+                                "Races / Practice",
+                                style: titleStyle,
                               ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          StaggeredGridView.countBuilder(
-                            crossAxisCount: 1,
-                            itemCount:
-                                enginePageController.mantainenceItemList.length,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return enginePageController
-                                  .mantainenceItemList[index];
-                            },
-                            staggeredTileBuilder: (index) =>
-                                StaggeredTile.fit(1),
-                          ),
-                          SizedBox(
-                            height: 25,
-                          ),
-                          AddDataButton(
-                            onTap: () {
-                              mantainenceDialog(context);
-                            },
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                        ],
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  "Date",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Fuel",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Par. L",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Tot. L",
+                                  style: subTitleStyle,
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            StaggeredGridView.countBuilder(
+                              crossAxisCount: 1,
+                              itemCount: enginePageController
+                                  .race_practiceItemList.length,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemBuilder: (BuildContext context, int index) {
+                                return GridItemTile.isRace(
+                                    enginePageController
+                                        .race_practiceItemList[index],
+                                    itemTextStyle,
+                                    pageController: enginePageController);
+                              },
+                              staggeredTileBuilder: (index) =>
+                                  StaggeredTile.fit(1),
+                            ),
+                            SizedBox(
+                              height: 25,
+                            ),
+                            AddDataButton(
+                              onTap: () {
+                                racesPracticeDialog(context);
+                              },
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: AppColors.mainColor,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+
+                            //MANTAINENCE FORM
+                            Center(
+                              child: Text(
+                                "Mantainence",
+                                style: titleStyle,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  "Date",
+                                  style: subTitleStyle,
+                                ),
+                                Text(
+                                  "Notes",
+                                  style: subTitleStyle,
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            StaggeredGridView.countBuilder(
+                              crossAxisCount: 1,
+                              itemCount: enginePageController
+                                  .mantainenceItemList.length,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemBuilder: (BuildContext context, int index) {
+                                return GridItemTile.isMantainence(
+                                  enginePageController
+                                      .mantainenceItemList[index],
+                                  itemTextStyle,
+                                  pageController: enginePageController,
+                                );
+                              },
+                              staggeredTileBuilder: (index) =>
+                                  StaggeredTile.fit(1),
+                            ),
+                            SizedBox(
+                              height: 25,
+                            ),
+                            AddDataButton(
+                              onTap: () {
+                                mantainenceDialog(context);
+                              },
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+              ),
             ),
           ),
         ),
@@ -1027,9 +1162,10 @@ class EnginePage extends StatelessWidget {
 
 class AddDataButton extends StatelessWidget {
   Function onTap;
+  String text;
   TextStyle itemTextStyle = GoogleFonts.montserrat(
       color: colorController.getTextColorTheme(), fontSize: Get.width * 0.03);
-  AddDataButton({this.onTap});
+  AddDataButton({this.onTap, this.text = "Add data"});
 
   @override
   Widget build(BuildContext context) {
@@ -1042,38 +1178,9 @@ class AddDataButton extends StatelessWidget {
               color: AppColors.mainColor,
               borderRadius: BorderRadius.circular(20)),
           child: Text(
-            "Add data",
+            text.toString(),
             style: itemTextStyle,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class GridItemTile extends StatelessWidget {
-  String text;
-  TextStyle itemTextStyle;
-  bool isNotes = false;
-
-  GridItemTile(this.text, this.itemTextStyle);
-
-  GridItemTile.isNotes(this.text, this.itemTextStyle, {this.isNotes = true});
-
-  String getName() {
-    return text;
-  }
-
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: isNotes ? 10 : 0),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: itemTextStyle,
         ),
       ),
     );
@@ -1087,6 +1194,7 @@ class FormFieldInputTile extends StatelessWidget {
   bool enabled;
   int maxLength;
   bool isNumeric = false;
+  String initialValue = "";
 
   FormFieldInputTile({
     this.isNumeric,
@@ -1095,11 +1203,13 @@ class FormFieldInputTile extends StatelessWidget {
     this.hintText,
     this.enabled,
     @required this.maxLength,
+    this.initialValue,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      initialValue: initialValue,
       keyboardType: isNumeric == null
           ? TextInputType.text
           : isNumeric

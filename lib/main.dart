@@ -19,6 +19,8 @@ Controller colorController = new Controller.colorController();
 
 main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
@@ -50,52 +52,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: Get.theme,
+
       home: isLoggedIn == null
           ? LoadingPage()
           : isLoggedIn
-              ? SlideDrawer(
-                  headDrawer: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Image.asset(
-                      "assets/senesi-motorsport-logo.png",
-                      alignment: Alignment.centerLeft,
-                      height: Get.height * 0.103,
-                    ),
-                  ),
-                  backgroundColor: AppColors.mainColor,
-                  /*backgroundGradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.0, 1.0],
-                    colors: [
-                      Color(0xFF000046),
-                      Color(0xFF1CB5E0),
-                    ],
-                  ),*/
-                  items: [
-                    MenuItem('Search Item', icon: FontAwesomeIcons.search,
-                        onTap: () {
-                      Get.to(() => SearchItemPage());
-                    }),
-                    MenuItem('Your Items', icon: FontAwesomeIcons.listAlt,
-                        onTap: () {
-                      Get.to(() => ShowItemsPage.comingFromPage(true));
-                    }),
-                    MenuItem('Your orders', icon: FontAwesomeIcons.user,
-                        onTap: () {
-                      Get.to(() => YourOrders());
-                    }),
-                    MenuItem('Notes', icon: FontAwesomeIcons.stickyNote,
-                        onTap: () {
-                      Get.to(() => NoteAndFolders("mainpage", "Your folders"));
-                    }),
-                    MenuItem('Log out', icon: FontAwesomeIcons.signOutAlt,
-                        onTap: () {
-                      woocommerce.logUserOut();
-                      Get.off(() => LoginPage());
-                    }),
-                  ],
-                  child: MainPage())
+              ? MainPage()
               : LoginPage(),
       //home: HttpRequestTest(),
       debugShowCheckedModeBanner: false,
