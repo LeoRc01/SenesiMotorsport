@@ -1,8 +1,54 @@
 import 'package:SenesiMotorsport/colors/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Controller extends GetxController {
+  /*
+  THEME PART
+  */
+
+  SharedPreferences prefs;
+
+  Future initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  Controller.colorController() {
+    initPrefs().then((value) {
+      prefs.getString("THEME") == "LIGHT"
+          ? changeToLightTheme()
+          : changeToDarkTheme();
+    });
+  }
+
+  Controller();
+
+  var backGroundColorTheme = AppColors.darkColor.obs;
+  var textColorTheme = Colors.white.obs;
+  var isDarkTheme = true.obs;
+
+  getBackGroundColorTheme() => backGroundColorTheme.value;
+  getTextColorTheme() => textColorTheme.value;
+
+  changeToLightTheme() {
+    prefs.setString("THEME", "LIGHT");
+    Get.changeTheme(ThemeData.light());
+    backGroundColorTheme(Colors.white);
+    textColorTheme(AppColors.darkColor);
+    isDarkTheme(false);
+  }
+
+  changeToDarkTheme() {
+    prefs.setString("THEME", "DARK");
+    Get.changeTheme(ThemeData.dark());
+    textColorTheme(Colors.white);
+    backGroundColorTheme(AppColors.darkColor);
+    isDarkTheme(true);
+  }
+
+  /**/
+
   var quantity = 0.obs;
   var hasChanged = 0.obs;
 
@@ -60,6 +106,7 @@ class Controller extends GetxController {
 
   //SHOW ITEMS PAGE SECTION
   List<dynamic> itemList = [].obs;
+  List<dynamic> selectedItems = [].obs;
 
   insertItemIntoList(item) {
     itemList.add(item);
@@ -84,6 +131,7 @@ class Controller extends GetxController {
   /////////////
 
   //NOTE PAGE SECTION
+  var isMoving = false.obs;
   var isModified = false.obs;
 
   setModified(state) {
@@ -93,4 +141,26 @@ class Controller extends GetxController {
   getModified() {
     return isModified.value;
   }
+
+  //ORDER PAGE SECTION
+  var hasOrderedSomething = false.obs;
+
+  getHasOrderedSomething() => hasOrderedSomething.value;
+  setHasOrderedSomething(value) => hasOrderedSomething(value);
+
+  //CREATE ENGINE SECTION
+
+  var selectedDateBreakInString = "Select a date".obs;
+  var selectedDateRacePracticeString = "Select a date".obs;
+  var selectedDateMantainenceString = "Select a date".obs;
+
+  setDateBreakInString(value) => selectedDateBreakInString(value);
+  setDateRacePracticeString(value) => selectedDateRacePracticeString(value);
+  setDateMantainenceString(value) => selectedDateMantainenceString(value);
+
+  List<dynamic> breakInItemList = [].obs;
+  List<dynamic> race_practiceItemList = [].obs;
+  List<dynamic> mantainenceItemList = [].obs;
+
+  Map<String, dynamic> generalInfo = {};
 }

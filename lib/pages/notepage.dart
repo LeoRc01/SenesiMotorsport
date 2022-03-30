@@ -1,24 +1,37 @@
 import 'package:SenesiMotorsport/colors/colors.dart';
+import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
+import 'package:SenesiMotorsport/url/url.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+
+import '../main.dart';
+import 'notesandfoldersPage.dart';
 
 class NotePage extends StatefulWidget {
   String title;
   String itemId;
   String noteContent;
+  String insideOf;
   bool isNew;
+  Controller otherPageController;
 
-  NotePage(title, itemId, noteContent) {
+  NotePage(title, itemId, noteContent, insideOf, otherPageController) {
     this.title = title;
     this.itemId = itemId;
     this.noteContent = noteContent;
+    this.insideOf = insideOf;
+    this.isNew = false;
+    this.otherPageController = otherPageController;
+    //this.otherPageController = controller;
   }
 
-  NotePage.newNote(this.title, this.noteContent, this.isNew);
+  NotePage.newNote(this.title, this.noteContent, this.isNew, this.insideOf,
+      this.otherPageController);
 
   @override
   _NotePageState createState() => _NotePageState();
@@ -31,11 +44,9 @@ class _NotePageState extends State<NotePage> {
   Uuid uuid = new Uuid();
 
   Controller noteController;
-  String description = 'My great package';
 
   @override
   void initState() {
-    print(widget.noteContent);
     titleController = new TextEditingController();
     titleController.text = widget.title;
 
@@ -46,112 +57,204 @@ class _NotePageState extends State<NotePage> {
     super.initState();
   }
 
+  createNote(uuid) async {
+    noteController.setIsLoading();
+    var url = UrlApp.url +
+        "/createNote.php?title=" +
+        titleController.text +
+        "&content=" +
+        contentController.text +
+        "&itemId=" +
+        uuid +
+        "&email=" +
+        UserEmail.userEmail;
+    Response response = await http.get(url).then((value) {
+      //Get.snackbar("Done!", "Note created successfully!");
+      insertNoteIntoFolder(widget.insideOf, uuid);
+    }).catchError((onError) {
+      noteController.setNotLoadingLoading();
+      Get.back();
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
+
+  insertNoteIntoFolder(insideOf, uuid) async {
+    var url = UrlApp.url +
+        "/insertItemIntoFolder.php?itemId=" +
+        uuid +
+        "&insideOf=" +
+        insideOf +
+        "&email=" +
+        UserEmail.userEmail;
+    Response res = await http.get(url).then((value) {
+      Map<String, dynamic> data = {
+        "title": titleController.text,
+        "content": contentController.text,
+        "isFolder": 0.toString(),
+        "itemId": uuid,
+      };
+      widget.otherPageController.itemList.add(data);
+
+      Get.back();
+      noteController.setNotLoadingLoading();
+      //Get.forceAppUpdate();
+      //Navigator.pop(context);
+      //Navigator.pop(context);
+    });
+  }
+
+  updateNote(uuid, {onDispose = false}) async {
+    noteController.setIsLoading();
+    var url = UrlApp.url +
+        "/updateNote.php?title=" +
+        titleController.text +
+        "&content=" +
+        contentController.text +
+        "&itemId=" +
+        uuid +
+        "&email=" +
+        UserEmail.userEmail;
+    Response response = await http.get(url).then((value) {
+      widget.otherPageController.itemList
+          .where((element) => element["itemId"] == widget.itemId)
+          .forEach((element) {
+        element["title"] = titleController.text;
+        element["content"] = contentController.text;
+      });
+      noteController.setNotLoadingLoading();
+      if (!onDispose) Get.back();
+    }).catchError((onError) {
+      noteController.setNotLoadingLoading();
+      Get.back();
+      print(onError);
+      Get.snackbar("Error", "No Internet connection.",
+          colorText: colorController.getBackGroundColorTheme());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10),
-        width: Get.width,
-        height: Get.height,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage("assets/bg.jpg"), fit: BoxFit.cover),
-        ),
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              child: Row(
-                children: [
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                        icon: FaIcon(
-                          FontAwesomeIcons.chevronLeft,
-                          color: AppColors.darkColor,
-                        ),
-                        onPressed: () {
-                          Get.back();
-                        }),
-                  ),
-                  Spacer(),
-                  Obx(
-                    () => noteController.getModified()
-                        ? IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.check,
-                              color: AppColors.darkColor,
-                            ),
-                            onPressed: () {
-                              if (contentController.text == "" &&
-                                  titleController.text == "" &&
-                                  widget.isNew) {
-                                Get.back();
-                              } else if (widget.isNew) {
-                                //TODO: CREATE NOTE
-                                //RICORDARSI DI CREARE ID USANDO UUID.v1
-                              } else {
-                                //TODO: UPDATE NOTE
-                              }
-                            })
-                        : Container(),
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          width: Get.width,
+          height: Get.height,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage("assets/bg.jpg"), fit: BoxFit.cover),
+          ),
+          child: Obx(
+            () => noteController.getLoading()
+                ? Container(
+                    child: Center(
+                      child: Text(
+                        "Loading...",
+                        style: GoogleFonts.montserrat(
+                            color: colorController.getTextColorTheme()),
+                      ),
+                    ),
                   )
-                ],
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                onChanged: (value) {
-                  noteController.setModified(true);
-                },
-                controller: titleController,
-                decoration: InputDecoration(
-                    hintText: "Title",
-                    hintStyle: GoogleFonts.montserrat(
-                        fontSize: Get.width * 0.07,
-                        fontWeight: FontWeight.w500),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: Get.width * 0.07,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-            SizedBox(
-              height: Get.height * 0.01,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                onChanged: (value) {
-                  noteController.setModified(true);
-                },
-                keyboardType: TextInputType.multiline,
-                maxLines: 27,
-                controller: contentController,
-                decoration: InputDecoration(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                style: GoogleFonts.montserrat(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+                : Column(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(
+                            top: MediaQuery.of(context).padding.top),
+                        child: Row(
+                          children: [
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              child: IconButton(
+                                  icon: FaIcon(
+                                    FontAwesomeIcons.chevronLeft,
+                                    color: AppColors.darkColor,
+                                  ),
+                                  onPressed: () {
+                                    Get.back();
+                                  }),
+                            ),
+                            Spacer(),
+                            Obx(
+                              () => noteController.getModified()
+                                  ? IconButton(
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.check,
+                                        color: AppColors.darkColor,
+                                      ),
+                                      onPressed: () {
+                                        if (contentController.text == "" &&
+                                            titleController.text == "" &&
+                                            widget.isNew) {
+                                          Get.back();
+                                        } else if (widget.isNew) {
+                                          //DONE: CREATE NOTE
+                                          //RICORDARSI DI CREARE ID USANDO UUID.v1
+                                          String suuid = uuid.v1();
+                                          createNote(suuid);
+                                        } else {
+                                          //DONE: UPDATE NOTE
+                                          updateNote(widget.itemId);
+                                        }
+                                      })
+                                  : Container(),
+                            )
+                          ],
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.darkColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextField(
+                          onChanged: (value) {
+                            noteController.setModified(true);
+                          },
+                          controller: titleController,
+                          decoration: InputDecoration(
+                              hintText: "Title",
+                              hintStyle: GoogleFonts.montserrat(
+                                  fontSize: Get.width * 0.07,
+                                  fontWeight: FontWeight.w500),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 10),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                          style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontSize: Get.width * 0.07,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      SizedBox(
+                        height: Get.height * 0.01,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.darkColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextField(
+                          onChanged: (value) {
+                            noteController.setModified(true);
+                          },
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 27,
+                          controller: contentController,
+                          decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 10),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          )),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:SenesiMotorsport/colors/colors.dart';
+import 'package:SenesiMotorsport/controllers/email.dart';
 import 'package:SenesiMotorsport/controllers/getxcontroller.dart';
 import 'package:SenesiMotorsport/pages/showItemsPage.dart';
 import 'package:SenesiMotorsport/url/url.dart';
@@ -9,8 +10,21 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:woocommerce/models/order.dart';
+
+import '../main.dart';
 
 class CreateItemPage extends StatefulWidget {
+  final bagID;
+
+  bool comingFromOrderPage = false;
+  LineItems product;
+
+  CreateItemPage.fromOrders(this.product, this.comingFromOrderPage,
+      {this.bagID = null});
+
+  CreateItemPage(this.bagID);
+
   @override
   _CreateItemPageState createState() => _CreateItemPageState();
 }
@@ -38,25 +52,29 @@ class _CreateItemPageState extends State<CreateItemPage> {
         value: "Tyres",
         child: Text(
           "Tyres",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Engine",
         child: Text(
           "Engine",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Tools",
         child: Text(
           "Tools",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
     DropdownMenuItem(
         value: "Oils",
         child: Text(
           "Oils",
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
   ];
 
@@ -66,6 +84,10 @@ class _CreateItemPageState extends State<CreateItemPage> {
   @override
   void initState() {
     getX_Controller.changeCategoryValue(items[0].value.toString());
+    if (widget.comingFromOrderPage) {
+      nameController.text = widget.product.name;
+      getX_Controller.setQuantity(widget.product.quantity);
+    }
     super.initState();
   }
 
@@ -74,196 +96,235 @@ class _CreateItemPageState extends State<CreateItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: colorController.getBackGroundColorTheme(),
+        iconTheme: IconThemeData(color: colorController.getTextColorTheme()),
+      ),
       resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.mainColor,
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/bg.jpg"),
-            fit: BoxFit.cover,
-          ),
+          color: colorController.getBackGroundColorTheme(),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+        padding: EdgeInsets.symmetric(horizontal: 20),
         width: Get.width,
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            color: AppColors.darkColor,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Form(
-            key: key,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TitleTile(text: "Name"),
-                InputTile(
-                  controller: nameController,
-                  hintText: "Name",
-                  getController: countItemNameLettersController,
-                ),
-                TitleTile(
-                  text: "Category",
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: Get.width / 2.7,
-                      child: DropdownButton<String>(
-                        elevation: 0,
-                        dropdownColor: AppColors.darkColor,
-                        isExpanded: true,
-                        hint: Obx(
-                          () => Text(
-                            getX_Controller.selectedCategoryValue.toString(),
+        child: Obx(
+          () => getX_Controller.getLoading()
+              ? Center(
+                  child: CircularProgressIndicator(),
+                )
+              : Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: colorController.getBackGroundColorTheme(),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Form(
+                    key: key,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TitleTile(text: "Name"),
+                        InputTile(
+                          controller: nameController,
+                          hintText: "Name",
+                          getController: countItemNameLettersController,
+                        ),
+                        TitleTile(
+                          text: "Category",
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: Get.width / 2.7,
+                              child: DropdownButton<String>(
+                                elevation: 0,
+                                dropdownColor:
+                                    colorController.getBackGroundColorTheme(),
+                                isExpanded: true,
+                                hint: Obx(
+                                  () => Text(
+                                    getX_Controller.selectedCategoryValue
+                                        .toString(),
+                                    style: GoogleFonts.montserrat(
+                                        color: colorController
+                                            .getTextColorTheme()),
+                                  ),
+                                ),
+                                items: items,
+                                onChanged: (clickedItem) {
+                                  getX_Controller
+                                      .changeCategoryValue(clickedItem);
+                                },
+                              ),
+                            ),
+                            /*
+                          Text(
+                            "or",
                             style: GoogleFonts.montserrat(color: Colors.white),
                           ),
-                        ),
-                        items: items,
-                        onChanged: (clickedItem) {
-                          getX_Controller.changeCategoryValue(clickedItem);
-                        },
-                      ),
-                    ),
-                    /*
-                        Text(
-                          "or",
-                          style: GoogleFonts.montserrat(color: Colors.white),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            //TODO: create popup menu with GETX
-                          },
-                          child: Container(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppColors.darkColor,
-                              borderRadius: BorderRadius.circular(10),
+                          GestureDetector(
+                            onTap: () {
+                              //TODO: create popup menu with GETX
+                            },
+                            child: Container(
+                              padding:
+                                  EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.darkColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                "Create a new one",
+                                style: GoogleFonts.montserrat(color: Colors.white),
+                              ),
                             ),
-                            child: Text(
-                              "Create a new one",
-                              style: GoogleFonts.montserrat(color: Colors.white),
+                          ),*/
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                                icon: FaIcon(
+                                  FontAwesomeIcons.minus,
+                                  color: AppColors.mainColor,
+                                ),
+                                onPressed: () {
+                                  getX_Controller.decrementQuantity();
+                                }),
+                            Obx(
+                              () => Text(getX_Controller.quantity.toString(),
+                                  style: GoogleFonts.montserrat(
+                                      color: AppColors.mainColor,
+                                      fontSize: Get.width * 0.06)),
                             ),
-                          ),
-                        ),*/
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                        icon: FaIcon(
-                          FontAwesomeIcons.minus,
-                          color: AppColors.mainColor,
+                            IconButton(
+                                icon: FaIcon(
+                                  FontAwesomeIcons.plus,
+                                  color: AppColors.mainColor,
+                                ),
+                                onPressed: () {
+                                  getX_Controller.incrementQuantity();
+                                }),
+                          ],
                         ),
-                        onPressed: () {
-                          getX_Controller.decrementQuantity();
-                        }),
-                    Obx(
-                      () => Text(getX_Controller.quantity.toString(),
-                          style: GoogleFonts.montserrat(
-                              color: AppColors.mainColor,
-                              fontSize: Get.width * 0.06)),
-                    ),
-                    IconButton(
-                        icon: FaIcon(
-                          FontAwesomeIcons.plus,
-                          color: AppColors.mainColor,
-                        ),
-                        onPressed: () {
-                          getX_Controller.incrementQuantity();
-                        }),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Container(
-                      alignment: Alignment.center,
-                      child: GestureDetector(
-                        onTap: () async {
-                          //FIXME: "Personal category" still to be implemented
-                          //DONE: Create item DONE!
-                          if (key.currentState.validate()) {
-                            if (getX_Controller.getQuantity() == 0) {
-                              Get.snackbar("Error", "Quantity can't be 0");
-                            } else {
-                              try {
-                                var itemName = nameController.text;
-                                var quantity = getX_Controller.getQuantity();
-                                categoryName =
-                                    getX_Controller.getCategoryValue();
-                                print("name: " + categoryName);
-                                var url = UrlApp.url +
-                                    "/insertItem.php?name=" +
-                                    itemName +
-                                    "&quantity=" +
-                                    quantity.toString() +
-                                    "&categoryName=" +
-                                    categoryName +
-                                    "";
-                                Response res =
-                                    await http.get(url).then((value) {
-                                  if (value.body == "1") {
-                                    Get.back();
-                                    Get.back();
-                                    Get.to(() => ShowItemsPage(),
-                                        transition: Transition.rightToLeft);
-                                    Get.snackbar(
-                                        "Done!", "Item inserted correctly");
-                                  } else {
-                                    Get.snackbar("Error", value.body,
-                                        snackPosition: SnackPosition.BOTTOM);
+                        Column(
+                          children: [
+                            Container(
+                              alignment: Alignment.center,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  //FIXME: "Personal category" still to be implemented
+                                  //DONE: Create item DONE!
+                                  if (key.currentState.validate()) {
+                                    if (getX_Controller.getQuantity() == 0) {
+                                      Get.snackbar(
+                                          "Error", "Quantity can't be 0",
+                                          colorText: colorController
+                                              .getBackGroundColorTheme());
+                                    } else {
+                                      try {
+                                        getX_Controller.setIsLoading();
+                                        var itemName = nameController.text;
+                                        var quantity =
+                                            getX_Controller.getQuantity();
+                                        categoryName =
+                                            getX_Controller.getCategoryValue();
+                                        print("name: " + categoryName);
+                                        var url = UrlApp.url +
+                                            "/insertItem.php?name=" +
+                                            itemName +
+                                            "&quantity=" +
+                                            quantity.toString() +
+                                            "&categoryName=" +
+                                            categoryName +
+                                            "&email=" +
+                                            UserEmail.userEmail;
+                                        Response res =
+                                            await http.get(url).then((value) {
+                                          if (value.body == "1") {
+                                            getX_Controller
+                                                .setNotLoadingLoading();
+                                            Get.back();
+                                            if (!widget.comingFromOrderPage) {
+                                              Get.back();
+                                              Get.to(
+                                                  () => ShowItemsPage(
+                                                        bagID: widget.bagID,
+                                                      ),
+                                                  transition:
+                                                      Transition.rightToLeft);
+                                            }
+                                          } else {
+                                            getX_Controller
+                                                .setNotLoadingLoading();
+                                            Get.back();
+                                            Get.snackbar("Error", value.body,
+                                                snackPosition:
+                                                    SnackPosition.BOTTOM,
+                                                colorText: colorController
+                                                    .getBackGroundColorTheme());
+                                          }
+                                        }).catchError((error) {
+                                          getX_Controller
+                                              .setNotLoadingLoading();
+                                          print(error);
+                                          Get.snackbar("Error", "No internet",
+                                              snackPosition:
+                                                  SnackPosition.BOTTOM,
+                                              colorText: colorController
+                                                  .getBackGroundColorTheme());
+                                        });
+                                      } catch (e) {
+                                        getX_Controller.setNotLoadingLoading();
+                                        Get.snackbar("Error", e.toString(),
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            colorText: colorController
+                                                .getBackGroundColorTheme());
+                                      }
+                                    }
                                   }
-                                }).catchError((error) {
-                                  print(error);
-                                  Get.snackbar("Error", "No internet",
-                                      snackPosition: SnackPosition.BOTTOM);
-                                });
-                              } catch (e) {
-                                Get.snackbar("Error", e.toString(),
-                                    snackPosition: SnackPosition.BOTTOM);
-                              }
-                            }
-                          }
-                        },
-                        child: Container(
-                          margin:
-                              EdgeInsets.symmetric(vertical: Get.height / 8),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 20, horizontal: 50),
-                          decoration: BoxDecoration(
-                              color: AppColors.mainColor,
-                              borderRadius: BorderRadius.circular(20)),
-                          child: Text("Create",
-                              style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontSize: Get.width * 0.045)),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        const _url = 'https://senesimotorsport.com/';
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: Get.height / 8),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 20, horizontal: 50),
+                                  decoration: BoxDecoration(
+                                      color: AppColors.mainColor,
+                                      borderRadius: BorderRadius.circular(20)),
+                                  child: Text("Create",
+                                      style: GoogleFonts.montserrat(
+                                          color: Colors.white,
+                                          fontSize: Get.width * 0.045)),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                const _url = 'https://senesimotorsport.com/';
 
-                        await canLaunch(_url)
-                            ? await launch(_url)
-                            : throw 'Could not launch $_url';
-                      },
-                      child: Text(
-                        "www.senesimotorsport.com",
-                        style: GoogleFonts.montserrat(
-                            color: Colors.black,
-                            decoration: TextDecoration.underline),
-                      ),
-                    )
-                  ],
+                                await canLaunch(_url)
+                                    ? await launch(_url)
+                                    : throw 'Could not launch $_url';
+                              },
+                              child: Text(
+                                "www.senesimotorsport.com",
+                                style: GoogleFonts.montserrat(
+                                    color: Colors.black,
+                                    decoration: TextDecoration.underline),
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -311,7 +372,8 @@ class _CategoryButtonState extends State<CategoryButton> {
         child: Center(
             child: Text(
           widget.categoryName,
-          style: GoogleFonts.montserrat(color: Colors.white),
+          style: GoogleFonts.montserrat(
+              color: colorController.getTextColorTheme()),
         )),
       ),
     );
@@ -360,14 +422,14 @@ class InputTile extends StatelessWidget {
           }
         }
       },
-      style: GoogleFonts.montserrat(color: Colors.white),
+      style: GoogleFonts.montserrat(color: colorController.getTextColorTheme()),
       textAlignVertical: TextAlignVertical.top,
       decoration: InputDecoration(
         enabledBorder: const OutlineInputBorder(
           // width: 0.0 produces a thin "hairline" border
           borderSide: const BorderSide(color: Colors.grey, width: 0.0),
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
         errorStyle: GoogleFonts.montserrat(color: AppColors.mainColor),
         hintText: hintText,
         hintStyle: GoogleFonts.montserrat(color: Colors.grey),
